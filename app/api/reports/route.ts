@@ -68,7 +68,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       take: 6
     });
-    const monthlyTrend = revenueData.reverse().map(r => ({
+    const monthlyTrend = revenueData.reverse().map((r: any) => ({
       month: r.month,
       revenue: r.revenue
     }));
