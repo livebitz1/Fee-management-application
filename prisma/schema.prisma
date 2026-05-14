@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Student {
+  id                String   @id @default(cuid())
+  name              String
+  class             String
+  section           String
+  admissionNumber   String   @unique
+  parentPhone       String
+  monthlyFee        Float
+  paymentStatus     String   @default("pending") // "paid", "pending", "overdue"
+  lastPaymentDate   DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  payments          Payment[]
+  receipts          Receipt[]
+  pendingFees       PendingFee[]
+
+  @@map("students")
+  @@index([class])
+  @@index([admissionNumber])
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentName       String
+  amount            Float
+  method            String   // "upi", "bank_transfer", "cash", "cheque"
+  utrId             String   @unique
+  month             String
+  year              Int
+  date              DateTime
+  status            String   @default("pending") // "completed", "pending", "failed"
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  receipt           Receipt?
+
+  @@map("payments")
+  @@index([studentId])
+  @@index([utrId])
+  @@index([date])
+}
+
+model Receipt {
+  id                String   @id @default(cuid())
+  paymentId         String   @unique
+  payment           Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  receiptNumber     String   @unique
+  studentName       String
+  amount            Float
+  paymentDate       DateTime
+  paymentMethod     String
+  month             String
+  utrId             String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("receipts")
+  @@index([studentId])
+  @@index([receiptNumber])
+}
+
+model PendingFee {
+  id                String   @id @default(cuid())
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student_name      String
+  class             String
+  monthsFell        Int
+  amount            Float
+  daysOverdue       Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("pending_fees")
+  @@index([studentId])
+}
+
+model DashboardStat {
+  id                String   @id @default(cuid())
+  totalStudents     Int
+  totalRevenue      Float
+  pendingFees       Float
+  overduePayments   Int
+  collectionRate    Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("dashboard_stats")
+}
+
+model RevenueData {
+  id                String   @id @default(cuid())
+  month             String
+  year              Int      @default(2024)
+  revenue           Float
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("revenue_data")
+  @@unique([month, year])
+}
+
+model RecentActivity {
+  id                String   @id @default(cuid())
+  student           String
+  action            String
+  amount            Float
+  time              String   // Keeping as string for "2 hours ago" etc, or use DateTime
+  status            String
+  createdAt         DateTime @default(now())
+
+  @@map("recent_activities")
+}
