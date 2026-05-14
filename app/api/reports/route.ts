@@ -27,14 +27,14 @@ export async function GET() {
     });
 
     const classStats: Record<string, { collected: number; target: number; studentCount: number }> = {};
-    students.forEach(student => {
+    students.forEach((student: any) => {
       const className = student.class;
       if (!classStats[className]) {
         classStats[className] = { collected: 0, target: 0, studentCount: 0 };
       }
       classStats[className].studentCount += 1;
       classStats[className].target += student.monthlyFee;
-      student.payments.forEach(payment => {
+      student.payments.forEach((payment: any) => {
         classStats[className].collected += payment.amount;
       });
     });
@@ -53,7 +53,7 @@ export async function GET() {
     });
 
     const methodStats: Record<string, number> = {};
-    payments.forEach(p => {
+    payments.forEach((p: any) => {
       const method = p.method || "Other";
       methodStats[method] = (methodStats[method] || 0) + p.amount;
     });
