@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,8 +19,28 @@ import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, CalendarIcon } from "lucide-react";
+import { 
+  CheckCircle2, 
+  AlertCircle, 
+  Calendar as CalendarIcon, 
+  User, 
+  IndianRupee, 
+  CreditCard, 
+  Wallet, 
+  FileText, 
+  History, 
+  ShieldCheck, 
+  Printer, 
+  Download, 
+  Mail,
+  ArrowRight,
+  Info,
+  RefreshCcw,
+} from "lucide-react";
 import { getStudents, createPayment, checkUtrId } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { downloadReceipt } from "@/lib/pdf";
+import { toast } from "sonner";
 
 interface Student {
   id: string;
@@ -41,8 +61,6 @@ interface SubmittedData {
   date: string;
   receiptNumber: string;
 }
-
-
 
 export default function CollectFeePage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -96,7 +114,7 @@ export default function CollectFeePage() {
         const { exists } = await checkUtrId(utrId);
         setUtrExists(exists);
         if (exists) {
-          setError("Duplicate UTR ID: This transaction has already been recorded.");
+          setError("Duplicate UTR ID detected. This transaction is already recorded.");
         } else if (error?.toLowerCase().includes("duplicate utr")) {
           setError(null);
         }
@@ -117,13 +135,7 @@ export default function CollectFeePage() {
     e.preventDefault();
     if (isDuplicateUtr) return;
     
-    if (
-      selectedStudent &&
-      selectedMonth &&
-      amount &&
-      paymentMethod &&
-      utrId
-    ) {
+    if (selectedStudent && selectedMonth && amount && paymentMethod && utrId) {
       try {
         setIsSubmitting(true);
         setError(null);
@@ -147,23 +159,12 @@ export default function CollectFeePage() {
           amount,
           method: paymentMethod,
           utr: utrId,
-          date: selectedMonth ? selectedMonth.toLocaleDateString() : new Date().toLocaleDateString(),
-          receiptNumber: res.receipt?.receiptNumber || `RCP-${selectedMonth ? selectedMonth.getFullYear() : new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
+          date: selectedMonth ? format(selectedMonth, "PPP") : format(new Date(), "PPP"),
+          receiptNumber: res.receipt?.receiptNumber || `RCP-${Date.now().toString().slice(-6)}`,
         });
         setIsSubmitted(true);
-        
-        // Reset form
-        setSelectedStudent("");
-        setSelectedMonth(new Date());
-        setAmount("");
-        setPaymentMethod("");
-        setUtrId("");
-        setNotes("");
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to create payment";
-        if (!errorMessage.toLowerCase().includes("duplicate utr")) {
-          console.error("Error creating payment:", err);
-        }
+        const errorMessage = err instanceof Error ? err.message : "Payment processing failed";
         setError(errorMessage);
       } finally {
         setIsSubmitting(false);
@@ -184,399 +185,422 @@ export default function CollectFeePage() {
     setError(null);
   };
 
+  const handleDownload = async () => {
+    if (!submittedData) return;
+    try {
+      toast.loading("Preparing high-quality PDF...", { id: "pdf-gen" });
+      await downloadReceipt("download-capture-area-fee", `Receipt_${submittedData.receiptNumber}`);
+      toast.success("Receipt saved successfully", { id: "pdf-gen" });
+    } catch (err) {
+      console.error(err);
+      toast.error("Generation failed. Try Print instead.", { id: "pdf-gen" });
+    }
+  };
+
   if (isSubmitted && submittedData) {
     return (
-      <div className="p-4 md:p-8 space-y-4 md:space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-black">Collect Fee</h1>
-            <p className="text-gray-500 text-sm mt-1">Payment Successful</p>
+      <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+            <CheckCircle2 className="w-8 h-8" />
           </div>
+          <h1 className="text-3xl font-black text-slate-900">Payment Confirmed</h1>
+          <p className="text-slate-500">Transaction recorded and receipt generated successfully.</p>
         </div>
 
-        {/* Success Message */}
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800 ml-2 text-sm">
-            Fee collected successfully. Receipt has been generated.
-          </AlertDescription>
-        </Alert>
-
-        {/* Receipt Preview */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          <Card className="col-span-1 lg:col-span-2 p-4 md:p-8 border-gray-200">
-            <div className="space-y-4 md:space-y-6">
-              {/* Receipt Header */}
-              <div className="border-b border-gray-200 pb-4 md:pb-6">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-black">RECEIPT</h2>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs md:text-sm text-gray-600 font-medium">
-                      Receipt No.
-                    </p>
-                    <p className="text-base md:text-lg font-semibold text-black">
-                      {submittedData.receiptNumber}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs md:text-sm text-gray-500">
-                  Date: {submittedData.date}
-                </p>
-              </div>
-
-              {/* Student Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="lg:col-span-2 rounded-3xl border-none shadow-2xl overflow-hidden bg-white printable-area">
+            <div className="bg-slate-900 p-8 text-white flex justify-between items-start">
               <div>
-                <p className="text-xs text-gray-600 font-medium uppercase">
-                  Student Information
-                </p>
-                <p className="text-base md:text-lg font-semibold text-black mt-1">
-                  {submittedData.student}
-                </p>
-                <p className="text-xs md:text-sm text-gray-600 mt-1">
-                  {student?.class} | ID: {student?.admissionNumber}
-                </p>
+                <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Fee Receipt</h2>
+                <p className="text-2xl font-bold italic">SmartFee Pro</p>
               </div>
-
-              {/* Payment Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div>
-                  <p className="text-xs text-gray-600 font-medium uppercase">
-                    Payment Method
-                  </p>
-                  <p className="text-xs md:text-sm font-semibold text-black mt-1">
-                    {submittedData.method === "upi"
-                      ? "UPI"
-                      : submittedData.method === "bank_transfer"
-                      ? "Bank Transfer"
-                      : submittedData.method === "cash"
-                      ? "Cash"
-                      : "Cheque"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-medium uppercase">
-                    UTR/Reference
-                  </p>
-                  <p className="text-xs md:text-sm font-semibold text-black mt-1">
-                    {submittedData.utr}
-                  </p>
-                </div>
-              </div>
-
-              {/* Amount */}
-              <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                <p className="text-xs md:text-sm text-gray-600">Amount Paid</p>
-                <p className="text-2xl md:text-3xl font-bold text-black mt-2">
-                  ₹{parseInt(submittedData.amount).toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  For: {submittedData.month}
-                </p>
-              </div>
-
-              <div className="border-t border-gray-200 pt-4 md:pt-6">
-                <p className="text-xs text-gray-500 text-center">
-                  This is a digital receipt. Please keep it for your records.
-                </p>
+              <div className="text-right">
+                <p className="text-xs font-bold text-slate-400 uppercase">Receipt No.</p>
+                <p className="text-lg font-mono font-bold text-emerald-400">{submittedData.receiptNumber}</p>
               </div>
             </div>
+            
+            <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</p>
+                  <p className="font-bold text-slate-900">{submittedData.student}</p>
+                  <p className="text-xs text-slate-500">{student?.class} | {student?.admissionNumber}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</p>
+                  <p className="font-bold text-slate-900">{submittedData.date}</p>
+                </div>
+              </div>
+
+              <div className="border-y border-slate-100 py-6 grid grid-cols-2 gap-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Channel</p>
+                  <p className="text-sm font-bold text-slate-700 uppercase">{submittedData.method.replace("_", " ")}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reference</p>
+                  <p className="text-sm font-mono font-bold text-slate-700">{submittedData.utr}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center bg-slate-50 rounded-2xl p-6">
+                <div>
+                  <p className="text-xs font-bold text-slate-500">Service Period</p>
+                  <p className="text-lg font-black text-slate-900">{submittedData.month}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-slate-500">Total Amount</p>
+                  <p className="text-3xl font-black text-slate-900">₹{parseInt(submittedData.amount).toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="pt-4 text-center">
+                <p className="text-[10px] text-slate-400 font-medium">Verified Digital Receipt • System Generated at {new Date().toLocaleTimeString()}</p>
+              </div>
+            </CardContent>
           </Card>
 
-          {/* Receipt Download and Actions */}
-          <div className="space-y-3 md:space-y-4">
-            <Card className="p-4 md:p-6 border-gray-200">
-              <h3 className="font-semibold text-sm md:text-base text-black mb-4">Receipt Actions</h3>
-              <div className="space-y-2 md:space-y-3">
-                <Button className="w-full bg-black hover:bg-gray-900 text-sm">
+          <div className="space-y-6">
+            <Card className="rounded-2xl border-none shadow-sm bg-white p-6">
+              <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                Quick Actions
+              </h3>
+              <div className="space-y-3">
+                <Button className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 h-11" onClick={() => window.print()}>
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print Receipt
+                </Button>
+                <Button variant="outline" className="w-full rounded-xl border-slate-200 h-11" onClick={handleDownload}>
+                  <Download className="w-4 h-4 mr-2" />
                   Download PDF
                 </Button>
-                <Button variant="outline" className="w-full text-sm">
-                  Send via Email
-                </Button>
-                <Button variant="outline" className="w-full text-sm">
-                  Print
-                </Button>
-              </div>
-            </Card>
 
-            <Card className="p-4 md:p-6 border-gray-200">
-              <h3 className="font-semibold text-sm md:text-base text-black mb-4">Summary</h3>
-              <div className="space-y-3 text-xs md:text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Student</span>
-                  <span className="font-medium text-black">
-                    {submittedData.student}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Month</span>
-                  <span className="font-medium text-black">
-                    {submittedData.month}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Amount</span>
-                  <span className="font-medium text-black">
-                    ₹{parseInt(submittedData.amount).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status</span>
-                  <Badge className="bg-green-100 text-green-800 border-0 text-xs">
-                    Completed
-                  </Badge>
-                </div>
               </div>
             </Card>
 
             <Button
               onClick={handleReset}
-              variant="outline"
-              className="w-full text-sm"
+              className="w-full rounded-2xl h-14 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 font-bold"
             >
               Collect Another Fee
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+          </div>
+        </div>
+        {/* Hidden capture area for digital PDF download */}
+        <div className="fixed -left-[4000px] top-0 pointer-events-none opacity-0">
+          <div id="download-capture-area-fee" className="w-[1000px] bg-white">
+            <div className="bg-slate-900 p-8 text-white flex justify-between items-start rounded-t-2xl">
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Fee Receipt</h2>
+                <p className="text-2xl font-bold italic">SmartFee Pro</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-slate-400 uppercase">Receipt No.</p>
+                <p className="text-lg font-mono font-bold text-emerald-400">{submittedData.receiptNumber}</p>
+              </div>
+            </div>
+            <div className="p-8 space-y-8 bg-white border-x border-b border-slate-100 rounded-b-2xl">
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</p>
+                  <p className="font-bold text-slate-900">{student?.name}</p>
+                  <p className="text-xs text-slate-500">Institution Enrollment Record</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Date</p>
+                  <p className="font-bold text-slate-900">{selectedMonth ? format(selectedMonth, "PPP") : format(new Date(), "PPP")}</p>
+                </div>
+              </div>
+              <div className="border-y border-slate-100 py-6 grid grid-cols-3 gap-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Channel</p>
+                  <p className="text-sm font-bold text-slate-700 uppercase">{paymentMethod.replace("_", " ")}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Period</p>
+                  <p className="text-sm font-bold text-slate-700 uppercase">{selectedMonth ? format(selectedMonth, "MMMM") : ""}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reference</p>
+                  <p className="text-sm font-mono font-bold text-slate-700">{utrId}</p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase">Payment Status</p>
+                  <div className="flex items-center gap-2 text-emerald-600 font-black text-lg">
+                    <CheckCircle2 className="w-5 h-5" />
+                    CLEARED
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-slate-500">Net Amount Paid</p>
+                  <p className="text-3xl font-black text-slate-900">₹{parseFloat(amount).toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="pt-8 text-center border-t border-slate-50">
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                  ABC High School • 123 Education Square • Contact: support@smartfee.pro<br/>
+                  This is a legally valid digital instrument generated by SmartFee Pro Management System.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+
   return (
-    <div className="p-4 md:p-8 space-y-4 md:space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-black">Collect Fee</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Record a new fee collection from a student
-        </p>
-      </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
+    <div className="p-4 md:p-8 bg-slate-50/30 min-h-screen">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">Collection Desk</h1>
+          <p className="text-slate-500 mt-1">Record student payments and generate digital invoices.</p>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Form */}
-        <Card className="col-span-1 lg:col-span-2 p-4 md:p-8 border-gray-200">
-          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-            {/* Student Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="student" className="text-sm font-medium">
-                Select Student
-              </Label>
-              <Select 
-                value={selectedStudent} 
-                onValueChange={(val) => {
-                  setSelectedStudent(val);
-                  if (error) setError(null);
-                }} 
-                disabled={isLoading}
-              >
-                <SelectTrigger className="border-gray-200 text-sm">
-                  <SelectValue placeholder={isLoading ? "Loading students..." : "Choose a student"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {students.map((student) => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.name || "Unknown"} ({student.class || "N/A"})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {error && (
+          <Alert className="border-rose-200 bg-rose-50 rounded-2xl animate-in slide-in-from-top-2">
+            <AlertCircle className="h-4 w-4 text-rose-600" />
+            <AlertDescription className="text-rose-800 ml-2 font-medium">
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
 
-            {/* Student Info */}
-            {student && (
-              <Card className="p-4 border-gray-200 bg-gray-50">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600">Monthly Fee</p>
-                    <p className="font-semibold text-black">
-                      ₹{student.monthlyFee}
-                    </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="lg:col-span-2 rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-8">
+              {/* Step 1: Student Selection */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">1</div>
+                  <h2 className="font-bold text-slate-800 uppercase tracking-wider text-xs">Student Identification</h2>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Search or Select Student</Label>
+                  <Select value={selectedStudent} onValueChange={(v) => { setSelectedStudent(v); setError(null); }} disabled={isLoading}>
+                    <SelectTrigger className="h-12 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all">
+                      <SelectValue placeholder={isLoading ? "Syncing student directory..." : "Type to find student..."} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-slate-100">
+                      {students.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name} — {s.class} ({s.admissionNumber})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <AnimatePresence>
+                  {student && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-sm">
+                          {student.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{student.name}</p>
+                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Standard Fee: ₹{student.monthlyFee}</p>
+                        </div>
+                      </div>
+                      <Badge className={cn(
+                        "rounded-full px-3 py-1 border-0 font-black text-[10px] uppercase tracking-wider",
+                        student.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                      )}>
+                        {student.paymentStatus}
+                      </Badge>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Step 2: Payment Details */}
+              <div className="space-y-6 pt-4 border-t border-slate-50">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">2</div>
+                  <h2 className="font-bold text-slate-800 uppercase tracking-wider text-xs">Payment Information</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Payment Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full h-12 bg-slate-50 border-transparent rounded-xl justify-start font-medium text-slate-700 hover:bg-slate-100">
+                          <CalendarIcon className="mr-2 h-4 w-4 text-indigo-600" />
+                          {selectedMonth ? format(selectedMonth, "PPP") : "Pick date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedMonth}
+                          onSelect={setSelectedMonth}
+                          className="rounded-2xl"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                  <div>
-                    <p className="text-gray-600">Current Status</p>
-                    <Badge className="">{student.paymentStatus}</Badge>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Amount Recieved (₹)</Label>
+                    <div className="relative group">
+                      <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="pl-10 h-12 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all font-bold text-lg"
+                      />
+                    </div>
                   </div>
                 </div>
-              </Card>
-            )}
 
-            {/* Month Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="month" className="text-sm font-medium">
-                Select Month
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal border-gray-200",
-                      !selectedMonth && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedMonth ? format(selectedMonth, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedMonth}
-                    onSelect={(date) => {
-                      setSelectedMonth(date);
-                      if (error) setError(null);
-                    }}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Payment Method</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger className="h-12 bg-slate-50 border-transparent rounded-xl">
+                        <SelectValue placeholder="Choose Method" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-slate-100">
+                        <SelectItem value="upi">Digital (UPI/App)</SelectItem>
+                        <SelectItem value="bank_transfer">Direct Bank Transfer</SelectItem>
+                        <SelectItem value="cash">Physical Cash</SelectItem>
+                        <SelectItem value="cheque">Bank Cheque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Transaction Ref (UTR)</Label>
+                    <div className="relative group">
+                      <ShieldCheck className={cn(
+                        "absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
+                        isCheckingUtr ? "text-indigo-400 animate-pulse" : isDuplicateUtr ? "text-rose-500" : "text-slate-400"
+                      )} />
+                      <Input
+                        placeholder="UTR or Ref Number"
+                        value={utrId}
+                        onChange={(e) => setUtrId(e.target.value.toUpperCase())}
+                        className={cn(
+                          "pl-10 h-12 bg-slate-50 border-transparent rounded-xl focus:bg-white transition-all font-mono text-sm uppercase",
+                          isDuplicateUtr && "border-rose-200 bg-rose-50 focus:border-rose-300 focus:ring-rose-100"
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Internal Memo (Optional)</Label>
+                  <Textarea
+                    placeholder="Add any specific details about this collection..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="bg-slate-50 border-transparent rounded-2xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all min-h-[100px] resize-none"
                   />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Amount */}
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="text-sm font-medium">
-                Amount
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  if (error) setError(null);
-                }}
-                className="border-gray-200 text-lg"
-              />
-              {student && (
-                <p className="text-xs text-gray-500">
-                  Monthly fee: ₹{student.monthlyFee}
-                </p>
-              )}
-            </div>
-
-            {/* Payment Method */}
-            <div className="space-y-2">
-              <Label htmlFor="method" className="text-sm font-medium">
-                Payment Method
-              </Label>
-              <Select 
-                value={paymentMethod} 
-                onValueChange={(val) => {
-                  setPaymentMethod(val);
-                  if (error) setError(null);
-                }}
-              >
-                <SelectTrigger className="border-gray-200">
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* UTR ID */}
-            <div className="space-y-2">
-              <Label htmlFor="utr" className="text-sm font-medium">
-                UTR ID / Reference
-              </Label>
-              <Input
-                id="utr"
-                placeholder="Enter UTR or transaction ID"
-                value={utrId}
-                onChange={(e) => {
-                  setUtrId(e.target.value);
-                  if (error) setError(null);
-                }}
-                className={`border-gray-200 ${
-                  isDuplicateUtr ? "border-red-500 ring-1 ring-red-500" : ""
-                } ${isCheckingUtr ? "opacity-70" : ""}`}
-              />
-              {isCheckingUtr && (
-                <p className="text-xs text-gray-500 animate-pulse">Checking UTR uniqueness...</p>
-              )}
-              {isDuplicateUtr && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-800 ml-2">
-                    This UTR ID already exists in the system. Please use a
-                    different one.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm font-medium">
-                Notes (Optional)
-              </Label>
-              <Textarea
-                id="notes"
-                placeholder="Add any additional notes..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="border-gray-200 resize-none h-20"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex gap-3 pt-4">
-              <Button variant="outline" type="button" onClick={handleReset} disabled={isSubmitting}>
-                Clear
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 bg-black hover:bg-gray-900"
-                disabled={!selectedStudent || !amount || isSubmitting || isDuplicateUtr}
-              >
-                {isSubmitting ? "Processing..." : "Collect Fee"}
-              </Button>
-            </div>
-          </form>
-        </Card>
-
-        {/* Quick Reference */}
-        <Card className="p-6 border-gray-200 h-fit">
-          <h3 className="font-semibold text-black mb-4">Quick Reference</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-gray-600 font-medium mb-2">
-                PAYMENT METHODS
-              </p>
-              <div className="space-y-1 text-sm">
-                <p className="text-gray-700">• UPI</p>
-                <p className="text-gray-700">• Bank Transfer</p>
-                <p className="text-gray-700">• Cash</p>
-                <p className="text-gray-700">• Cheque</p>
+                </div>
               </div>
-            </div>
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-xs text-gray-600 font-medium mb-2">
-                RECENT COLLECTIONS
-              </p>
-              <p className="text-sm text-gray-600">
-                4 fees collected today
-              </p>
-              <p className="text-lg font-semibold text-black mt-1">
-                ₹31,000
-              </p>
-            </div>
+
+              <div className="pt-6 flex gap-4">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={handleReset}
+                  className="rounded-xl h-14 px-8 text-slate-400 hover:text-slate-600"
+                >
+                  Clear Form
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!selectedStudent || !amount || !paymentMethod || !utrId || isSubmitting || isDuplicateUtr}
+                  className="flex-1 rounded-2xl h-14 bg-black hover:bg-slate-800 text-white font-bold text-lg shadow-xl shadow-slate-200 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <RefreshCcw className="w-5 h-5 animate-spin" />
+                      Finalizing...
+                    </div>
+                  ) : (
+                    "Complete Transaction"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Card>
+
+          {/* Quick Stats Sidebar */}
+          <div className="space-y-6">
+            <Card className="rounded-3xl border-none shadow-sm bg-white p-6 overflow-hidden">
+              <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <History className="w-4 h-4 text-indigo-600" />
+                Session Insights
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                    <Wallet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Today&apos;s Yield</p>
+                    <p className="text-xl font-black text-slate-900">₹31,000</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 border-t border-slate-50 pt-6">
+                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Receipts Issued</p>
+                    <p className="text-xl font-black text-slate-900">12 Digital</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 p-4 bg-slate-900 rounded-2xl text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Pro Tip</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Verify UTR IDs from the bank portal before finalizing to avoid double entries.
+                </p>
+              </div>
+            </Card>
+
+            <Card className="rounded-3xl border-none shadow-sm bg-indigo-600 p-6 text-white overflow-hidden relative">
+              <div className="relative z-10">
+                <h3 className="font-bold mb-2">System Status</h3>
+                <p className="text-xs text-indigo-100 mb-4 leading-relaxed">Receipt engine is active and syncing with cloud records.</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Fully Operational</span>
+                </div>
+              </div>
+              <CreditCard className="absolute -right-6 -bottom-6 w-32 h-32 text-indigo-500 opacity-20 rotate-12" />
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
 }
+
+

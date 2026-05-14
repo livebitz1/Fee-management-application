@@ -127,3 +127,48 @@
     @apply font-sans;
     }
 }
+
+@media screen {
+  .printable-area {
+    display: none !important;
+  }
+}
+
+@media print {
+  /* Hide UI elements */
+  .no-print, 
+  header, 
+  aside, 
+  nav, 
+  button {
+    display: none !important;
+  }
+
+  /* Show the receipt area */
+  .printable-area {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset body for print */
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure the receipt content itself is visible */
+  .printable-area * {
+    visibility: visible !important;
+  }
+}

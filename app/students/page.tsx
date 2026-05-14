@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,9 +22,24 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus } from "lucide-react";
+import { 
+  Search, 
+  Plus, 
+  Users, 
+  GraduationCap, 
+  Phone, 
+  IndianRupee, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle,
+  MoreVertical,
+  UserPlus,
+  CreditCard,
+  UserCircle
+} from "lucide-react";
 import { getStudents, createStudent } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 interface Student {
   id: string;
@@ -114,129 +129,140 @@ export default function StudentsPage() {
       student.admissionNumber?.includes(searchTerm)) ?? false
   );
 
-  const getPaymentStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case "paid":
-        return "bg-green-100 text-green-800";
+        return { color: "bg-emerald-50 text-emerald-700 border-emerald-100", icon: CheckCircle2, label: "Paid" };
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return { color: "bg-amber-50 text-amber-700 border-amber-100", icon: Clock, label: "Pending" };
       case "overdue":
-        return "bg-red-100 text-red-800";
+        return { color: "bg-rose-50 text-rose-700 border-rose-100", icon: AlertCircle, label: "Overdue" };
       default:
-        return "bg-gray-100 text-gray-800";
+        return { color: "bg-slate-50 text-slate-700 border-slate-100", icon: Clock, label: "N/A" };
     }
   };
 
   if (error) {
     return (
-      <div className="p-4 md:p-8">
-        <Card className="p-6 border-red-200 bg-red-50">
-          <p className="text-red-800">{error}</p>
+      <div className="p-8">
+        <Card className="p-8 border-red-200 bg-red-50 flex flex-col items-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <h2 className="text-xl font-bold text-red-900 mb-2">Error Loading Students</h2>
+          <p className="text-red-700 mb-6">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="outline" className="border-red-200 text-red-700 hover:bg-red-100">
+            Retry
+          </Button>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-4 md:space-y-6">
+    <div className="p-4 md:p-8 space-y-8 bg-slate-50/30 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-black">Students</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage all enrolled students and their fee status
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Student Directory</h1>
+          <p className="text-slate-500 mt-1">
+            Manage student records, enrollment details, and payment statuses.
           </p>
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-black hover:bg-gray-900 text-sm w-full md:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Student
+            <Button className="rounded-xl bg-black hover:bg-slate-800 text-white shadow-lg shadow-slate-200">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Register Student
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[550px] rounded-2xl border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
-              <DialogDescription>
-                Enter the student&apos;s information to add them to the system.
+              <DialogTitle className="text-2xl font-bold">New Enrollment</DialogTitle>
+              <DialogDescription className="text-slate-500">
+                Register a new student into the system. All fields marked with * are required.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-5 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Student Name</Label>
+                <Label htmlFor="name" className="text-xs font-bold text-slate-500 uppercase">Student Full Name *</Label>
                 <Input
                   id="name"
-                  placeholder="Enter student name"
-                  className="border-gray-200"
+                  placeholder="e.g. Rahul Sharma"
+                  className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="class">Class</Label>
+                  <Label htmlFor="class" className="text-xs font-bold text-slate-500 uppercase">Class/Grade *</Label>
                   <Input
                     id="class"
-                    placeholder="e.g., 10-A"
-                    className="border-gray-200"
+                    placeholder="e.g. 10"
+                    className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
                     value={formData.class}
                     onChange={(e) => setFormData({ ...formData, class: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="section">Section</Label>
+                  <Label htmlFor="section" className="text-xs font-bold text-slate-500 uppercase">Section</Label>
                   <Input
                     id="section"
-                    placeholder="e.g., A"
-                    className="border-gray-200"
+                    placeholder="e.g. A"
+                    className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
                     value={formData.section}
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="admission">Admission Number</Label>
-                <Input
-                  id="admission"
-                  placeholder="e.g., 2024001"
-                  className="border-gray-200"
-                  value={formData.admissionNumber}
-                  onChange={(e) => setFormData({ ...formData, admissionNumber: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admission" className="text-xs font-bold text-slate-500 uppercase">Admission No. *</Label>
+                  <Input
+                    id="admission"
+                    placeholder="e.g. ADM-2024-001"
+                    className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
+                    value={formData.admissionNumber}
+                    onChange={(e) => setFormData({ ...formData, admissionNumber: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fee" className="text-xs font-bold text-slate-500 uppercase">Monthly Fee (₹)</Label>
+                  <Input
+                    id="fee"
+                    type="number"
+                    placeholder="e.g. 2500"
+                    className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
+                    value={formData.monthlyFee}
+                    onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Parent Phone</Label>
-                <Input
-                  id="phone"
-                  placeholder="e.g., 9876543210"
-                  className="border-gray-200"
-                  value={formData.parentPhone}
-                  onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fee">Monthly Fee</Label>
-                <Input
-                  id="fee"
-                  type="number"
-                  placeholder="e.g., 5000"
-                  className="border-gray-200"
-                  value={formData.monthlyFee}
-                  onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
-                />
+                <Label htmlFor="phone" className="text-xs font-bold text-slate-500 uppercase">Parent Contact No.</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="phone"
+                    placeholder="e.g. +91 98765 43210"
+                    className="pl-10 h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
+                    value={formData.parentPhone}
+                    onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="flex gap-3 pt-4">
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  className="flex-1 h-11 rounded-xl text-slate-500"
                   onClick={() => setIsAddModalOpen(false)}
                 >
-                  Cancel
+                  Discard
                 </Button>
                 <Button
-                  className="bg-black hover:bg-gray-900"
+                  className="flex-1 h-11 rounded-xl bg-black hover:bg-slate-800 text-white shadow-lg shadow-slate-100"
                   onClick={handleAddStudent}
                 >
-                  Add Student
+                  Confirm Registration
                 </Button>
               </div>
             </div>
@@ -244,124 +270,166 @@ export default function StudentsPage() {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <Card className="p-4 border-gray-200">
-        <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search by name or admission number..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border-0 placeholder:text-gray-500 focus:ring-0 text-sm"
-          />
-        </div>
-      </Card>
-
-      {/* Table */}
-      <Card className="border-gray-200 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-gray-200 bg-gray-50 hover:bg-gray-50">
-              <TableHead className="text-gray-700 font-semibold text-xs md:text-sm">
-                Student Name
-              </TableHead>
-              <TableHead className="text-gray-700 font-semibold text-xs md:text-sm">
-                Class
-              </TableHead>
-              <TableHead className="text-gray-700 font-semibold text-xs md:text-sm">
-                Admission No.
-              </TableHead>
-              <TableHead className="text-gray-700 font-semibold text-xs md:text-sm hidden sm:table-cell">
-                Phone
-              </TableHead>
-              <TableHead className="text-gray-700 font-semibold text-xs md:text-sm">
-                Monthly Fee
-              </TableHead>
-              <TableHead className="text-gray-700 font-semibold text-xs md:text-sm">
-                Status
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i} className="border-gray-200">
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                </TableRow>
-              ))
-            ) : filteredStudents.length > 0 ? (
-              filteredStudents.map((student) => (
-                <TableRow key={student.id} className="border-gray-200">
-                  <TableCell className="font-medium text-black text-xs md:text-sm">
-                    {student.name}
-                  </TableCell>
-                  <TableCell className="text-gray-600 text-xs md:text-sm">
-                    {student.class}
-                  </TableCell>
-                  <TableCell className="text-gray-600 text-xs md:text-sm">
-                    {student.admissionNumber}
-                  </TableCell>
-                  <TableCell className="text-gray-600 text-xs md:text-sm hidden sm:table-cell">
-                    {student.parentPhone}
-                  </TableCell>
-                  <TableCell className="font-semibold text-black text-xs md:text-sm">
-                    ₹{student.monthlyFee}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={`${getPaymentStatusColor(
-                        student.paymentStatus || ""
-                      )} border-0`}
-                    >
-                      {student.paymentStatus
-                        ? student.paymentStatus.charAt(0).toUpperCase() +
-                          student.paymentStatus.slice(1)
-                        : "N/A"}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                  No students found matching your search
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-6">
-        <Card className="p-6 border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">Total Students</p>
-          <p className="text-2xl font-bold text-black mt-2">
-            {isLoading ? <Skeleton className="h-8 w-12" /> : students.length}
-          </p>
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="rounded-2xl border-none shadow-sm group">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-slate-500">Total Strength</p>
+                <div className="text-2xl font-black text-slate-900">
+                  {isLoading ? <Skeleton className="h-8 w-12" /> : students.length}
+                </div>
+              </div>
+              <div className="p-2.5 bg-indigo-50 rounded-xl text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="p-6 border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">
-            Fees Paid This Month
-          </p>
-          <p className="text-2xl font-bold text-black mt-2">
-            {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter((s) => s.paymentStatus === "paid").length}
-          </p>
+
+        <Card className="rounded-2xl border-none shadow-sm group">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-slate-500">Cleared This Month</p>
+                <div className="text-2xl font-black text-slate-900">
+                  {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter((s) => s.paymentStatus === "paid").length}
+                </div>
+              </div>
+              <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="p-6 border-gray-200">
-          <p className="text-gray-600 text-sm font-medium">Pending/Overdue</p>
-          <p className="text-2xl font-bold text-black mt-2">
-            {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter(
-              (s) => s.paymentStatus === "pending" || s.paymentStatus === "overdue"
-            ).length}
-          </p>
+
+        <Card className="rounded-2xl border-none shadow-sm group">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-slate-500">Pending Follow-up</p>
+                <div className="text-2xl font-black text-slate-900">
+                  {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter((s) => s.paymentStatus === "pending" || s.paymentStatus === "overdue").length}
+                </div>
+              </div>
+              <div className="p-2.5 bg-rose-50 rounded-xl text-rose-600 group-hover:bg-rose-100 transition-colors">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
+
+      {/* Directory Section */}
+      <Card className="rounded-2xl border-none shadow-sm bg-white overflow-hidden">
+        <div className="p-4 md:p-6 border-b border-slate-50 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="relative group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+            <Input
+              placeholder="Search by student name or admission number..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all text-sm w-full md:max-w-md"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Student Profile</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Academic Detail</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Parent Contact</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Monthly Fee</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-center">Fee Status</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i} className="border-b border-slate-50">
+                    <TableCell className="py-4 px-6"><Skeleton className="h-10 w-48 rounded-lg" /></TableCell>
+                    <TableCell className="py-4 px-6"><Skeleton className="h-10 w-24 rounded-lg" /></TableCell>
+                    <TableCell className="py-4 px-6"><Skeleton className="h-10 w-32 rounded-lg" /></TableCell>
+                    <TableCell className="py-4 px-6"><Skeleton className="h-10 w-20 rounded-lg" /></TableCell>
+                    <TableCell className="py-4 px-6"><Skeleton className="h-8 w-20 rounded-full mx-auto" /></TableCell>
+                    <TableCell className="py-4 px-6 text-right"><Skeleton className="h-9 w-24 rounded-lg ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => {
+                  const statusInfo = getStatusConfig(student.paymentStatus || "");
+                  const StatusIcon = statusInfo.icon;
+
+                  return (
+                    <TableRow key={student.id} className="group hover:bg-slate-50/40 transition-colors border-b border-slate-50 last:border-0">
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-black text-sm">
+                            {student.name.charAt(0)}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 text-sm">{student.name}</span>
+                            <span className="text-[10px] font-mono text-slate-400 mt-0.5 tracking-tighter">ID: {student.admissionNumber}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
+                            <GraduationCap className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-700">{student.class} - {student.section || 'N/A'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
+                            <Phone className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-medium text-slate-600">{student.parentPhone || 'No Contact'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <span className="font-black text-slate-900 text-sm">₹{student.monthlyFee.toLocaleString()}</span>
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-center">
+                        <Badge className={`${statusInfo.color} border shadow-none px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {statusInfo.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-right">
+                        <Link href="/collect-fee">
+                          <Button size="sm" variant="ghost" className="h-9 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs">
+                            <CreditCard className="w-3.5 h-3.5 mr-2" />
+                            Collect Fee
+                          </Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="p-4 bg-slate-50 rounded-full mb-3 text-slate-300">
+                        <Users className="w-8 h-8" />
+                      </div>
+                      <p className="text-slate-500 font-medium">No students found</p>
+                      <p className="text-slate-400 text-xs mt-1">Try adjusting your search criteria</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   );
 }

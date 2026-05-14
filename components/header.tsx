@@ -24,29 +24,9 @@ export function Header({ onMenuClick }: HeaderProps) {
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search..."
-            className="pl-10 rounded-lg border-gray-200 bg-gray-50 text-sm"
-          />
-        </div>
-      </div>
 
-      {/* Right section */}
+
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="text-gray-600">
-          <Bell className="w-5 h-5" />
-        </Button>
-
-        <div className="h-8 border-l border-gray-200"></div>
-
-        <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" />
-          <AvatarFallback>AD</AvatarFallback>
-        </Avatar>
       </div>
     </div>
   );

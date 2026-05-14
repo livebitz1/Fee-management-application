@@ -14,9 +14,14 @@ import {
   Filter,
   Calendar,
   IndianRupee,
-  Clock
+  Clock,
+  Printer
 } from "lucide-react";
 import { getReportsData } from "@/lib/api";
+import { downloadReceipt } from "@/lib/pdf";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -77,6 +82,18 @@ export default function ReportsPage() {
       mounted = false;
     };
   }, []);
+
+  const handleExport = async () => {
+    if (!reportsData) return;
+    try {
+      toast.loading("Compiling financial report...", { id: "report-gen" });
+      await downloadReceipt("report-capture-area", `Financial_Report_${format(new Date(), "yyyy_MM_dd")}`);
+      toast.success("Report exported successfully", { id: "report-gen" });
+    } catch (err) {
+      console.error(err);
+      toast.error("Export failed. Try printing the page.", { id: "report-gen" });
+    }
+  };
 
   if (error) {
     return (
@@ -144,11 +161,14 @@ export default function ReportsPage() {
           <p className="text-slate-500">Comprehensive overview of school fee collections and performance</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl border-slate-200 bg-white hover:bg-slate-50">
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
+          <Button variant="outline" className="rounded-xl border-slate-200 bg-white hover:bg-slate-50 no-print" onClick={() => window.print()}>
+            <Printer className="w-4 h-4 mr-2" />
+            Print Page
           </Button>
-          <Button className="rounded-xl bg-black hover:bg-slate-800 text-white shadow-lg shadow-slate-200">
+          <Button 
+            className="rounded-xl bg-black hover:bg-slate-800 text-white shadow-lg shadow-slate-200 no-print"
+            onClick={handleExport}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export Data
           </Button>
@@ -437,6 +457,106 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Hidden Report Template for PDF Capture */}
+      <div className="fixed -left-[5000px] top-0 pointer-events-none opacity-0">
+        <div id="report-capture-area" className="w-[1000px] bg-white p-12 space-y-10">
+          <div className="flex justify-between items-end border-b-2 border-slate-900 pb-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Financial Audit Report</h1>
+              <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">ABC High School • Academic Session 2024-25</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-slate-400 uppercase">Generated On</p>
+              <p className="text-lg font-bold text-slate-900">{format(new Date(), "PPP")}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-8">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <p className="text-xs font-bold text-slate-500 uppercase mb-1">Total Revenue</p>
+              <p className="text-2xl font-black text-slate-900">₹{summary.totalCollected.toLocaleString()}</p>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <p className="text-xs font-bold text-slate-500 uppercase mb-1">Pending Arrears</p>
+              <p className="text-2xl font-black text-slate-900">₹{summary.totalPending.toLocaleString()}</p>
+            </div>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <p className="text-xs font-bold text-slate-500 uppercase mb-1">Collection Compliance</p>
+              <p className="text-2xl font-black text-slate-900">{summary.overallCollectionRate}%</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-slate-900 border-l-4 border-slate-900 pl-4 uppercase">Class-wise Performance</h2>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-900 text-white uppercase text-[10px] font-black tracking-widest">
+                  <th className="p-4 rounded-tl-xl">Grade</th>
+                  <th className="p-4 text-center">Enrollment</th>
+                  <th className="p-4 text-right">Collected</th>
+                  <th className="p-4 text-right">Target</th>
+                  <th className="p-4 text-right rounded-tr-xl">Rate</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm font-medium">
+                {classWiseData.map((row, idx) => (
+                  <tr key={idx} className="border-b border-slate-100">
+                    <td className="p-4 font-bold text-slate-900">{row.class}</td>
+                    <td className="p-4 text-center text-slate-600">{row.studentCount}</td>
+                    <td className="p-4 text-right font-bold text-slate-900">₹{row.collected.toLocaleString()}</td>
+                    <td className="p-4 text-right text-slate-500">₹{row.target.toLocaleString()}</td>
+                    <td className="p-4 text-right">
+                      <span className={cn(
+                        "px-2 py-1 rounded-lg text-[10px] font-black",
+                        row.rate >= 90 ? "bg-emerald-50 text-emerald-700" : 
+                        row.rate >= 70 ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
+                      )}>
+                        {row.rate}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid grid-cols-2 gap-12 pt-8">
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-slate-900 uppercase">Revenue Composition</h2>
+              <div className="space-y-3">
+                {methodData.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-sm font-bold text-slate-700">{item.name}</span>
+                    <span className="text-sm font-black text-slate-900">₹{item.value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4 bg-slate-900 text-white p-8 rounded-3xl">
+              <h2 className="text-lg font-bold uppercase tracking-widest text-slate-400">Executive Insight</h2>
+              <p className="text-sm leading-relaxed text-slate-300">
+                The institution has achieved a collection compliance rate of <span className="text-emerald-400 font-bold">{summary.overallCollectionRate}%</span> for the current period. 
+                <span className="font-bold text-white"> {performanceSummary.bestPerformingClass} </span> leads with the highest contribution. 
+                Current pending amount stands at <span className="text-amber-400 font-bold">₹{summary.totalPending.toLocaleString()}</span> across {summary.totalStudents} enrollments.
+              </p>
+              <div className="pt-4 border-t border-slate-800 flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Compliance Status</span>
+                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/30">
+                  Healthy
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-12 text-center">
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-relaxed">
+              Confidential Financial Record • Generated via SmartFee Pro Intelligence<br/>
+              © 2024 ABC High School Administration System
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
