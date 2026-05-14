@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Start a transaction to ensure all operations succeed together
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // 1. Create the payment
       const payment = await tx.payment.create({
         data: {
