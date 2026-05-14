@@ -165,7 +165,7 @@ export async function getRecentActivities(): Promise<{
 // Reports API
 export async function getReportsData(): Promise<{
   collectionData: { name: string; value: number; fill: string }[];
-  classWiseData: { class: string; collected: number; target: number; studentCount: number; rate: number }[];
+  classWiseData: { course: string; collected: number; target: number; studentCount: number; rate: number }[];
   methodData: { name: string; value: number }[];
   monthlyTrend: { month: string; revenue: number }[];
   summary: {
@@ -175,7 +175,7 @@ export async function getReportsData(): Promise<{
     overallCollectionRate: number;
   };
   performanceSummary: {
-    bestPerformingClass: string;
+    bestPerformingCourse: string;
     onTimeCollectionRate: string;
   };
 }> {
@@ -186,7 +186,7 @@ export async function getReportsData(): Promise<{
 export async function getPendingFees(): Promise<{
   id: string;
   student_name: string;
-  class: string;
+  course: string;
   monthsFell: number;
   amount: number;
   daysOverdue: number;

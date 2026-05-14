@@ -1,10 +1,11 @@
 export type Student = {
   id: string;
   name: string;
-  class: string;
-  section: string;
+  course: string;
+  academicYear: string;
+  semester?: string;
   admissionNumber: string;
-  parentPhone: string;
+  studentPhone: string;
   monthlyFee: number;
   paymentStatus: "paid" | "pending" | "overdue";
   lastPaymentDate?: string;
@@ -29,6 +30,9 @@ export type Receipt = {
   id: string;
   receiptNumber: string;
   studentName: string;
+  course?: string;
+  academicYear?: string;
+  semester?: string;
   amount: number;
   paymentDate: string;
   paymentMethod: string;

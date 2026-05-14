@@ -28,21 +28,13 @@ import {
   Copy
 } from "lucide-react";
 import { getReceipts } from "@/lib/api";
+import { Receipt } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { downloadReceipt } from "@/lib/pdf";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-interface Receipt {
-  id: string;
-  receiptNumber: string;
-  studentName: string;
-  amount: number;
-  paymentDate: string;
-  paymentMethod: string;
-  month: string;
-  utrId: string;
-}
+
 
 // Reusable Receipt Content Component
 function ReceiptContent({ receipt, id, className }: { receipt: Receipt; id?: string; className?: string }) {
@@ -62,9 +54,9 @@ function ReceiptContent({ receipt, id, className }: { receipt: Receipt; id?: str
       <div className="p-8 space-y-8 bg-white">
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student Name</p>
             <p className="font-bold text-slate-900">{receipt.studentName}</p>
-            <p className="text-xs text-slate-500">Institution Enrollment Record</p>
+            <p className="text-xs text-slate-500">{receipt.course || 'N/A'}</p>
           </div>
           <div className="space-y-1 text-right">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction Date</p>
@@ -258,11 +250,9 @@ export default function ReceiptsPage() {
 
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
-                      <User className="w-3.5 h-3.5" />
-                    </div>
+                  <div className="flex flex-col">
                     <span className="font-bold text-slate-900 text-sm">{receipt.studentName}</span>
+                    <span className="text-[10px] text-slate-400">{receipt.course}</span>
                   </div>
                 </div>
 
@@ -272,7 +262,7 @@ export default function ReceiptsPage() {
                     <p className="text-lg font-black text-slate-900">₹{receipt.amount.toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Year</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Academic Session</p>
                     <p className="text-xs font-bold text-indigo-600">{receipt.month}</p>
                   </div>
                 </div>

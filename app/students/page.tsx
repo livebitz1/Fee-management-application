@@ -44,10 +44,11 @@ import Link from "next/link";
 interface Student {
   id: string;
   name: string;
-  class: string;
-  section: string;
+  course: string;
+  academicYear: string;
+  semester?: string;
   admissionNumber: string;
-  parentPhone: string;
+  studentPhone: string;
   monthlyFee: number;
   paymentStatus: string;
 }
@@ -60,10 +61,11 @@ export default function StudentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    class: "",
-    section: "",
+    course: "",
+    academicYear: "",
+    semester: "",
     admissionNumber: "",
-    parentPhone: "",
+    studentPhone: "",
     monthlyFee: "",
   });
 
@@ -99,7 +101,7 @@ export default function StudentsPage() {
 
   const handleAddStudent = async () => {
     try {
-      if (!formData.name || !formData.class || !formData.admissionNumber) {
+      if (!formData.name || !formData.course || !formData.admissionNumber) {
         setError("Please fill in all required fields");
         return;
       }
@@ -109,10 +111,11 @@ export default function StudentsPage() {
       });
       setFormData({
         name: "",
-        class: "",
-        section: "",
+        course: "",
+        academicYear: "",
+        semester: "",
         admissionNumber: "",
-        parentPhone: "",
+        studentPhone: "",
         monthlyFee: "",
       });
       setIsAddModalOpen(false);
@@ -194,37 +197,48 @@ export default function StudentsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="class" className="text-xs font-bold text-slate-500 uppercase">Class/Grade *</Label>
+                  <Label htmlFor="course" className="text-xs font-bold text-slate-500 uppercase">Course Enrolled *</Label>
                   <Input
-                    id="class"
-                    placeholder="e.g. 10"
+                    id="course"
+                    placeholder="e.g. B.Tech CSE"
                     className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
-                    value={formData.class}
-                    onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+                    value={formData.course}
+                    onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="section" className="text-xs font-bold text-slate-500 uppercase">Section</Label>
+                  <Label htmlFor="academicYear" className="text-xs font-bold text-slate-500 uppercase">Academic Year *</Label>
                   <Input
-                    id="section"
-                    placeholder="e.g. A"
+                    id="academicYear"
+                    placeholder="e.g. 2024-25"
                     className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
-                    value={formData.section}
-                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                    value={formData.academicYear}
+                    onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="admission" className="text-xs font-bold text-slate-500 uppercase">Admission No. *</Label>
+                  <Label htmlFor="semester" className="text-xs font-bold text-slate-500 uppercase">Semester</Label>
+                  <Input
+                    id="semester"
+                    placeholder="e.g. Semester 3"
+                    className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
+                    value={formData.semester}
+                    onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admission" className="text-xs font-bold text-slate-500 uppercase">Enrollment No. *</Label>
                   <Input
                     id="admission"
-                    placeholder="e.g. ADM-2024-001"
+                    placeholder="e.g. UNV-2024-001"
                     className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
                     value={formData.admissionNumber}
                     onChange={(e) => setFormData({ ...formData, admissionNumber: e.target.value })}
                   />
                 </div>
+              </div>
                 <div className="space-y-2">
                   <Label htmlFor="fee" className="text-xs font-bold text-slate-500 uppercase">Total Yearly Fee (₹)</Label>
                   <Input
@@ -236,17 +250,16 @@ export default function StudentsPage() {
                     onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
                   />
                 </div>
-              </div>
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-xs font-bold text-slate-500 uppercase">Parent Contact No.</Label>
+                <Label htmlFor="phone" className="text-xs font-bold text-slate-500 uppercase">Student Contact No.</Label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     id="phone"
                     placeholder="e.g. +91 98765 43210"
                     className="pl-10 h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
-                    value={formData.parentPhone}
-                    onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
+                    value={formData.studentPhone}
+                    onChange={(e) => setFormData({ ...formData, studentPhone: e.target.value })}
                   />
                 </div>
               </div>
@@ -339,11 +352,11 @@ export default function StudentsPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
-                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Student Profile</TableHead>
-                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Academic Detail</TableHead>
-                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Parent Contact</TableHead>
-                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Total Fee</TableHead>
-                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-center">Fee Status</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Student Details</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Course & Year</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Mobile Contact</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Annual Fee</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-center">Payment Status</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -382,7 +395,10 @@ export default function StudentsPage() {
                           <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
                             <GraduationCap className="w-3.5 h-3.5" />
                           </div>
-                          <span className="text-xs font-bold text-slate-700">{student.class} - {student.section || 'N/A'}</span>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-700">{student.course}</span>
+                            <span className="text-[10px] text-slate-400">{student.academicYear} {student.semester && `| ${student.semester}`}</span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-6">
@@ -390,7 +406,7 @@ export default function StudentsPage() {
                           <div className="p-1.5 bg-slate-100 rounded-lg text-slate-500">
                             <Phone className="w-3.5 h-3.5" />
                           </div>
-                          <span className="text-xs font-medium text-slate-600">{student.parentPhone || 'No Contact'}</span>
+                          <span className="text-xs font-medium text-slate-600">{student.studentPhone || 'No Contact'}</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-6">

@@ -29,10 +29,11 @@ export async function POST(request: NextRequest) {
     const student = await prisma.student.create({
       data: {
         name: body.name,
-        class: body.class,
-        section: body.section,
+        course: body.course,
+        academicYear: body.academicYear,
+        semester: body.semester,
         admissionNumber: body.admissionNumber,
-        parentPhone: body.parentPhone,
+        studentPhone: body.studentPhone,
         monthlyFee: body.monthlyFee,
         paymentStatus: body.paymentStatus || "pending",
       },

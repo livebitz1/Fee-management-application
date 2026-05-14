@@ -28,24 +28,24 @@ export async function GET() {
 
     const classStats: Record<string, { collected: number; target: number; studentCount: number }> = {};
     students.forEach((student: any) => {
-      const className = student.class;
-      if (!classStats[className]) {
-        classStats[className] = { collected: 0, target: 0, studentCount: 0 };
+      const courseName = student.course;
+      if (!classStats[courseName]) {
+        classStats[courseName] = { collected: 0, target: 0, studentCount: 0 };
       }
-      classStats[className].studentCount += 1;
-      classStats[className].target += student.monthlyFee;
+      classStats[courseName].studentCount += 1;
+      classStats[courseName].target += student.monthlyFee;
       student.payments.forEach((payment: any) => {
-        classStats[className].collected += payment.amount;
+        classStats[courseName].collected += payment.amount;
       });
     });
 
-    const classWiseData = Object.entries(classStats).map(([className, stats]) => ({
-      class: className,
+    const classWiseData = Object.entries(classStats).map(([courseName, stats]) => ({
+      course: courseName,
       collected: stats.collected,
       target: stats.target,
       studentCount: stats.studentCount,
       rate: stats.target > 0 ? Math.round((stats.collected / stats.target) * 100) : 0
-    })).sort((a, b) => a.class.localeCompare(b.class));
+    })).sort((a, b) => a.course.localeCompare(b.course));
 
     // 3. Payment Method Distribution
     const payments = await prisma.payment.findMany({
@@ -110,7 +110,7 @@ export async function GET() {
       monthlyTrend,
       summary,
       performanceSummary: {
-        bestPerformingClass: bestClass,
+        bestPerformingCourse: bestClass,
         onTimeCollectionRate: maxRate > 0 ? (maxRate * 100).toFixed(1) + "%" : "0%",
       }
     });

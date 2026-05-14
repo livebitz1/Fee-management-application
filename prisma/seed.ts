@@ -17,18 +17,19 @@ async function main() {
   await prisma.revenueData.deleteMany();
   await prisma.dashboardStat.deleteMany();
 
-  console.log("Seeding database...");
+  console.log("Seeding university database...");
 
-  // Create students
+  // Create university students
   const students = await Promise.all([
     prisma.student.create({
       data: {
         name: "Aaryan Singh",
-        class: "10-A",
-        section: "A",
-        admissionNumber: "2024001",
-        parentPhone: "9876543210",
-        monthlyFee: 5000,
+        course: "B.Tech Computer Science",
+        academicYear: "2024-25",
+        semester: "Semester 3",
+        admissionNumber: "UNV2024001",
+        studentPhone: "9876543210",
+        monthlyFee: 175000,
         paymentStatus: "paid",
         lastPaymentDate: new Date("2024-05-01"),
       },
@@ -36,11 +37,12 @@ async function main() {
     prisma.student.create({
       data: {
         name: "Priya Sharma",
-        class: "10-B",
-        section: "B",
-        admissionNumber: "2024002",
-        parentPhone: "9876543211",
-        monthlyFee: 5000,
+        course: "MBA Marketing",
+        academicYear: "2024-25",
+        semester: "Semester 1",
+        admissionNumber: "UNV2024002",
+        studentPhone: "9876543211",
+        monthlyFee: 250000,
         paymentStatus: "paid",
         lastPaymentDate: new Date("2024-05-02"),
       },
@@ -48,33 +50,36 @@ async function main() {
     prisma.student.create({
       data: {
         name: "Rohan Patel",
-        class: "9-A",
-        section: "A",
-        admissionNumber: "2024003",
-        parentPhone: "9876543212",
-        monthlyFee: 4500,
+        course: "B.Com Honors",
+        academicYear: "2023-24",
+        semester: "Semester 4",
+        admissionNumber: "UNV2024003",
+        studentPhone: "9876543212",
+        monthlyFee: 85000,
         paymentStatus: "pending",
       },
     }),
     prisma.student.create({
       data: {
         name: "Ananya Gupta",
-        class: "11-A",
-        section: "A",
-        admissionNumber: "2024004",
-        parentPhone: "9876543213",
-        monthlyFee: 6000,
+        course: "M.Tech Robotics",
+        academicYear: "2024-25",
+        semester: "Semester 2",
+        admissionNumber: "UNV2024004",
+        studentPhone: "9876543213",
+        monthlyFee: 195000,
         paymentStatus: "overdue",
       },
     }),
     prisma.student.create({
       data: {
         name: "Nikhil Kumar",
-        class: "9-B",
-        section: "B",
-        admissionNumber: "2024005",
-        parentPhone: "9876543214",
-        monthlyFee: 4500,
+        course: "B.Sc Physics",
+        academicYear: "2024-25",
+        semester: "Semester 5",
+        admissionNumber: "UNV2024005",
+        studentPhone: "9876543214",
+        monthlyFee: 75000,
         paymentStatus: "paid",
         lastPaymentDate: new Date("2024-04-15"),
       },
@@ -82,11 +87,12 @@ async function main() {
     prisma.student.create({
       data: {
         name: "Divya Verma",
-        class: "10-A",
-        section: "A",
-        admissionNumber: "2024006",
-        parentPhone: "9876543215",
-        monthlyFee: 5000,
+        course: "B.Tech CSE",
+        academicYear: "2024-25",
+        semester: "Semester 3",
+        admissionNumber: "UNV2024006",
+        studentPhone: "9876543215",
+        monthlyFee: 175000,
         paymentStatus: "paid",
         lastPaymentDate: new Date("2024-05-05"),
       },
@@ -94,29 +100,30 @@ async function main() {
     prisma.student.create({
       data: {
         name: "Arjun Desai",
-        class: "11-B",
-        section: "B",
-        admissionNumber: "2024007",
-        parentPhone: "9876543216",
-        monthlyFee: 6000,
+        course: "LL.B Law",
+        academicYear: "2023-24",
+        semester: "Semester 6",
+        admissionNumber: "UNV2024007",
+        studentPhone: "9876543216",
+        monthlyFee: 110000,
         paymentStatus: "pending",
       },
     }),
     prisma.student.create({
       data: {
         name: "Sneha Iyer",
-        class: "12-A",
-        section: "A",
-        admissionNumber: "2024008",
-        parentPhone: "9876543217",
-        monthlyFee: 6500,
+        course: "Ph.D Data Science",
+        academicYear: "2024-25",
+        admissionNumber: "UNV2024008",
+        studentPhone: "9876543217",
+        monthlyFee: 65000,
         paymentStatus: "paid",
         lastPaymentDate: new Date("2024-05-08"),
       },
     }),
   ]);
 
-  console.log(`Created ${students.length} students`);
+  console.log(`Created ${students.length} university students`);
 
   // Create payments
   const payments = await Promise.all([
@@ -124,10 +131,10 @@ async function main() {
       data: {
         studentId: students[0].id,
         studentName: students[0].name,
-        amount: 5000,
+        amount: 175000,
         method: "upi",
         utrId: "UPI2024050001",
-        month: "May",
+        month: "Annual Session 2024-25",
         year: 2024,
         date: new Date("2024-05-01"),
         status: "completed",
@@ -137,10 +144,10 @@ async function main() {
       data: {
         studentId: students[1].id,
         studentName: students[1].name,
-        amount: 5000,
+        amount: 250000,
         method: "bank_transfer",
         utrId: "BT2024050002",
-        month: "May",
+        month: "Annual Session 2024-25",
         year: 2024,
         date: new Date("2024-05-02"),
         status: "completed",
@@ -150,10 +157,10 @@ async function main() {
       data: {
         studentId: students[4].id,
         studentName: students[4].name,
-        amount: 4500,
+        amount: 75000,
         method: "cash",
         utrId: "CASH2024050003",
-        month: "May",
+        month: "Annual Session 2024-25",
         year: 2024,
         date: new Date("2024-05-08"),
         status: "completed",
@@ -163,10 +170,10 @@ async function main() {
       data: {
         studentId: students[5].id,
         studentName: students[5].name,
-        amount: 5000,
+        amount: 175000,
         method: "cheque",
         utrId: "CHK2024050004",
-        month: "May",
+        month: "Annual Session 2024-25",
         year: 2024,
         date: new Date("2024-05-05"),
         status: "completed",
@@ -176,10 +183,10 @@ async function main() {
       data: {
         studentId: students[7].id,
         studentName: students[7].name,
-        amount: 6500,
+        amount: 65000,
         method: "upi",
         utrId: "UPI2024050005",
-        month: "May",
+        month: "Annual Session 2024-25",
         year: 2024,
         date: new Date("2024-05-08"),
         status: "completed",
@@ -189,7 +196,7 @@ async function main() {
 
   console.log(`Created ${payments.length} payments`);
 
-  // Create receipts
+  // Create receipts with university details
   await Promise.all([
     prisma.receipt.create({
       data: {
@@ -197,10 +204,13 @@ async function main() {
         studentId: students[0].id,
         receiptNumber: "RCP-2024-0001",
         studentName: students[0].name,
-        amount: 5000,
+        course: students[0].course,
+        academicYear: students[0].academicYear,
+        semester: students[0].semester,
+        amount: 175000,
         paymentDate: new Date("2024-05-01"),
         paymentMethod: "UPI",
-        month: "May",
+        month: "Annual Session 2024-25",
         utrId: "UPI2024050001",
       },
     }),
@@ -210,10 +220,13 @@ async function main() {
         studentId: students[1].id,
         receiptNumber: "RCP-2024-0002",
         studentName: students[1].name,
-        amount: 5000,
+        course: students[1].course,
+        academicYear: students[1].academicYear,
+        semester: students[1].semester,
+        amount: 250000,
         paymentDate: new Date("2024-05-02"),
         paymentMethod: "Bank Transfer",
-        month: "May",
+        month: "Annual Session 2024-25",
         utrId: "BT2024050002",
       },
     }),
@@ -223,10 +236,13 @@ async function main() {
         studentId: students[4].id,
         receiptNumber: "RCP-2024-0003",
         studentName: students[4].name,
-        amount: 4500,
+        course: students[4].course,
+        academicYear: students[4].academicYear,
+        semester: students[4].semester,
+        amount: 75000,
         paymentDate: new Date("2024-05-08"),
         paymentMethod: "Cash",
-        month: "May",
+        month: "Annual Session 2024-25",
         utrId: "CASH2024050003",
       },
     }),
@@ -236,16 +252,19 @@ async function main() {
         studentId: students[5].id,
         receiptNumber: "RCP-2024-0004",
         studentName: students[5].name,
-        amount: 5000,
+        course: students[5].course,
+        academicYear: students[5].academicYear,
+        semester: students[5].semester,
+        amount: 175000,
         paymentDate: new Date("2024-05-05"),
         paymentMethod: "Cheque",
-        month: "May",
+        month: "Annual Session 2024-25",
         utrId: "CHK2024050004",
       },
     }),
   ]);
 
-  console.log("Created receipts");
+  console.log("Created university receipts");
 
   // Create pending fees
   await Promise.all([
@@ -253,9 +272,9 @@ async function main() {
       data: {
         studentId: students[2].id,
         student_name: students[2].name,
-        class: students[2].class,
+        course: students[2].course,
         monthsFell: 2,
-        amount: 9000,
+        amount: 170000,
         daysOverdue: 15,
       },
     }),
@@ -263,9 +282,9 @@ async function main() {
       data: {
         studentId: students[3].id,
         student_name: students[3].name,
-        class: students[3].class,
+        course: students[3].course,
         monthsFell: 1,
-        amount: 6000,
+        amount: 195000,
         daysOverdue: 8,
       },
     }),
@@ -279,42 +298,42 @@ async function main() {
       data: {
         month: "Jan",
         year: 2024,
-        revenue: 120000,
+        revenue: 1200000,
       },
     }),
     prisma.revenueData.create({
       data: {
         month: "Feb",
         year: 2024,
-        revenue: 135000,
+        revenue: 1350000,
       },
     }),
     prisma.revenueData.create({
       data: {
         month: "Mar",
         year: 2024,
-        revenue: 128000,
+        revenue: 1280000,
       },
     }),
     prisma.revenueData.create({
       data: {
         month: "Apr",
         year: 2024,
-        revenue: 142000,
+        revenue: 1420000,
       },
     }),
     prisma.revenueData.create({
       data: {
         month: "May",
         year: 2024,
-        revenue: 155000,
+        revenue: 1550000,
       },
     }),
     prisma.revenueData.create({
       data: {
         month: "Jun",
         year: 2024,
-        revenue: 148000,
+        revenue: 1480000,
       },
     }),
   ]);
@@ -326,9 +345,9 @@ async function main() {
     data: {
       totalStudents: students.length,
       totalRevenue: payments.reduce((sum, p) => sum + p.amount, 0),
-      pendingFees: 15000,
+      pendingFees: 365000,
       overduePayments: 2,
-      collectionRate: 92.5,
+      collectionRate: 88.5,
     },
   });
 
@@ -339,8 +358,8 @@ async function main() {
     prisma.recentActivity.create({
       data: {
         student: "Aaryan Singh",
-        action: "Fee collected",
-        amount: 5000,
+        action: "Annual Fee Collected",
+        amount: 175000,
         time: "2 hours ago",
         status: "completed",
       },
@@ -348,8 +367,8 @@ async function main() {
     prisma.recentActivity.create({
       data: {
         student: "Priya Sharma",
-        action: "Fee collected",
-        amount: 5000,
+        action: "Semester Fee Collected",
+        amount: 250000,
         time: "4 hours ago",
         status: "completed",
       },
@@ -357,8 +376,8 @@ async function main() {
     prisma.recentActivity.create({
       data: {
         student: "Rohan Patel",
-        action: "Payment reminder sent",
-        amount: 4500,
+        action: "Payment Reminder Sent",
+        amount: 85000,
         time: "1 day ago",
         status: "pending",
       },
@@ -366,8 +385,8 @@ async function main() {
     prisma.recentActivity.create({
       data: {
         student: "Ananya Gupta",
-        action: "Fee overdue notice",
-        amount: 6000,
+        action: "Overdue Notice Issued",
+        amount: 195000,
         time: "2 days ago",
         status: "overdue",
       },
@@ -375,7 +394,7 @@ async function main() {
   ]);
 
   console.log("Created recent activities");
-  console.log("Seeding completed!");
+  console.log("University Seeding Completed!");
 }
 
 main()

@@ -13,22 +13,23 @@ datasource db {
 model Student {
   id                String   @id @default(cuid())
   name              String
-  class             String
-  section           String
+  course            String   // e.g., "B.Tech Computer Science", "MBA"
+  academicYear      String   // e.g., "1st Year", "2nd Year"
+  semester          String?  // e.g., "Semester 3"
   admissionNumber   String   @unique
-  parentPhone       String
-  monthlyFee        Float
+  studentPhone      String
+  monthlyFee        Float    // Total Yearly/Semester Fee
   paymentStatus     String   @default("pending") // "paid", "pending", "overdue"
   lastPaymentDate   DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-
+  
   payments          Payment[]
   receipts          Receipt[]
   pendingFees       PendingFee[]
 
   @@map("students")
-  @@index([class])
+  @@index([course])
   @@index([admissionNumber])
 }
 
@@ -64,6 +65,9 @@ model Receipt {
   student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   receiptNumber     String   @unique
   studentName       String
+  course            String?
+  academicYear      String?
+  semester          String?
   amount            Float
   paymentDate       DateTime
   paymentMethod     String
@@ -82,7 +86,7 @@ model PendingFee {
   studentId         String
   student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   student_name      String
-  class             String
+  course            String
   monthsFell        Int
   amount            Float
   daysOverdue       Int

@@ -40,7 +40,7 @@ import {
 
 interface ReportData {
   collectionData: { name: string; value: number; fill: string }[];
-  classWiseData: { class: string; collected: number; target: number; studentCount: number; rate: number }[];
+  classWiseData: { course: string; collected: number; target: number; studentCount: number; rate: number }[];
   methodData: { name: string; value: number }[];
   monthlyTrend: { month: string; revenue: number }[];
   summary: {
@@ -50,7 +50,7 @@ interface ReportData {
     overallCollectionRate: number;
   };
   performanceSummary: {
-    bestPerformingClass: string;
+    bestPerformingCourse: string;
     onTimeCollectionRate: string;
   };
 }
@@ -340,8 +340,8 @@ export default function ReportsPage() {
         {/* Class-wise Performance */}
         <Card className="col-span-1 lg:col-span-2 rounded-2xl border-none shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">Class Performance</CardTitle>
-            <CardDescription>Collection progress and target achievement per grade</CardDescription>
+            <CardTitle className="text-lg font-semibold">Course-wise Performance</CardTitle>
+            <CardDescription>Collection progress and target achievement per course</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[350px] w-full pt-4">
@@ -349,7 +349,7 @@ export default function ReportsPage() {
                 <BarChart data={classWiseData} barGap={12}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis 
-                    dataKey="class" 
+                    dataKey="course" 
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fill: '#64748b', fontSize: 12 }}
@@ -419,9 +419,9 @@ export default function ReportsPage() {
                   <div className="p-2 bg-white rounded-lg border border-slate-200">
                     <TrendingUp className="w-4 h-4 text-slate-600" />
                   </div>
-                  <span className="text-sm font-medium text-slate-600">Top Performing Class</span>
+                  <span className="text-sm font-medium text-slate-600">Top Performing Course</span>
                 </div>
-                <Badge className="bg-black text-white px-3">{performanceSummary.bestPerformingClass}</Badge>
+                <Badge className="bg-black text-white px-3">{performanceSummary.bestPerformingCourse}</Badge>
               </div>
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
@@ -464,8 +464,8 @@ export default function ReportsPage() {
         <div id="report-capture-area" className="w-[1000px] bg-white p-12 space-y-10">
           <div className="flex justify-between items-end border-b-2 border-slate-900 pb-8">
             <div className="space-y-2">
-              <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Financial Audit Report</h1>
-              <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">ABC High School • Academic Session 2024-25</p>
+              <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">University Audit Report</h1>
+              <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">ABC University • Academic Session 2024-25</p>
             </div>
             <div className="text-right">
               <p className="text-xs font-bold text-slate-400 uppercase">Generated On</p>
@@ -489,11 +489,11 @@ export default function ReportsPage() {
           </div>
 
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-slate-900 border-l-4 border-slate-900 pl-4 uppercase">Class-wise Performance</h2>
+            <h2 className="text-xl font-bold text-slate-900 border-l-4 border-slate-900 pl-4 uppercase">Course-wise Performance</h2>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-white uppercase text-[10px] font-black tracking-widest">
-                  <th className="p-4 rounded-tl-xl">Grade</th>
+                  <th className="p-4 rounded-tl-xl">Course/Degree</th>
                   <th className="p-4 text-center">Enrollment</th>
                   <th className="p-4 text-right">Collected</th>
                   <th className="p-4 text-right">Target</th>
@@ -503,7 +503,7 @@ export default function ReportsPage() {
               <tbody className="text-sm font-medium">
                 {classWiseData.map((row, idx) => (
                   <tr key={idx} className="border-b border-slate-100">
-                    <td className="p-4 font-bold text-slate-900">{row.class}</td>
+                    <td className="p-4 font-bold text-slate-900">{row.course}</td>
                     <td className="p-4 text-center text-slate-600">{row.studentCount}</td>
                     <td className="p-4 text-right font-bold text-slate-900">₹{row.collected.toLocaleString()}</td>
                     <td className="p-4 text-right text-slate-500">₹{row.target.toLocaleString()}</td>
@@ -538,7 +538,7 @@ export default function ReportsPage() {
               <h2 className="text-lg font-bold uppercase tracking-widest text-slate-400">Executive Insight</h2>
               <p className="text-sm leading-relaxed text-slate-300">
                 The institution has achieved a collection compliance rate of <span className="text-emerald-400 font-bold">{summary.overallCollectionRate}%</span> for the current period. 
-                <span className="font-bold text-white"> {performanceSummary.bestPerformingClass} </span> leads with the highest contribution. 
+                <span className="font-bold text-white"> {performanceSummary.bestPerformingCourse} </span> leads with the highest contribution. 
                 Current pending amount stands at <span className="text-amber-400 font-bold">₹{summary.totalPending.toLocaleString()}</span> across {summary.totalStudents} enrollments.
               </p>
               <div className="pt-4 border-t border-slate-800 flex justify-between items-center">
@@ -553,7 +553,7 @@ export default function ReportsPage() {
           <div className="pt-12 text-center">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-relaxed">
               Confidential Financial Record • Generated via SmartFee Pro Intelligence<br/>
-              © 2024 ABC High School Administration System
+              © 2024 ABC University Administration System
             </p>
           </div>
         </div>

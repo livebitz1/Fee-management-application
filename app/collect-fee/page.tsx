@@ -225,7 +225,7 @@ export default function CollectFeePage() {
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</p>
                   <p className="font-bold text-slate-900">{submittedData.student}</p>
-                  <p className="text-xs text-slate-500">{student?.class} | {student?.admissionNumber}</p>
+                  <p className="text-xs text-slate-500">{student?.course} | {student?.admissionNumber}</p>
                 </div>
                 <div className="space-y-1 text-right">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</p>
@@ -392,7 +392,7 @@ export default function CollectFeePage() {
                     <SelectContent className="rounded-xl border-slate-100">
                       {students.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.name} — {s.class} ({s.admissionNumber})
+                          {s.name} — {s.course} ({s.admissionNumber})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -424,13 +424,17 @@ export default function CollectFeePage() {
                         </Badge>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-indigo-100/50">
+                      <div className="grid grid-cols-4 gap-4 pt-4 border-t border-indigo-100/50">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Yearly Fee</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Course/Year</p>
+                          <p className="text-sm font-black text-slate-900 truncate">{student.course} ({student.academicYear})</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Fee</p>
                           <p className="text-sm font-black text-slate-900">₹{student.monthlyFee.toLocaleString()}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Amount Paid</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Paid</p>
                           <p className="text-sm font-black text-emerald-600">
                             ₹{(student.payments?.reduce((acc, p) => acc + p.amount, 0) || 0).toLocaleString()}
                           </p>

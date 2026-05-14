@@ -63,7 +63,7 @@ interface RecentActivity {
 interface PendingFee {
   id: string;
   student_name: string;
-  class: string;
+  course: string;
   monthsFell: number;
   amount: number;
   daysOverdue: number;
@@ -496,7 +496,7 @@ export default function Dashboard() {
                       <div>
                         <p className="text-sm font-bold text-slate-900">{fee.student_name}</p>
                         <div className="flex gap-2 mt-0.5">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{fee.class}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{fee.course}</span>
                           <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">• {fee.monthsFell} Month Pending</span>
                         </div>
                       </div>
