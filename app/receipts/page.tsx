@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Eye, Download, Search, Printer } from "lucide-react";
 import { getReceipts } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Receipt {
   id: string;
@@ -29,6 +30,7 @@ interface Receipt {
 export default function ReceiptsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
 
@@ -36,6 +38,7 @@ export default function ReceiptsPage() {
     let mounted = true;
     const load = async () => {
       try {
+        setIsLoading(true);
         const data = await getReceipts();
         if (mounted) {
           setReceipts(data);
@@ -44,6 +47,10 @@ export default function ReceiptsPage() {
         if (mounted) {
           console.error("Error fetching receipts:", err);
           setError("Failed to load receipts");
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
         }
       }
     };
@@ -96,7 +103,40 @@ export default function ReceiptsPage() {
 
       {/* Grid of Receipts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {filteredReceipts.length > 0 ? (
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="p-4 md:p-6 border-gray-200">
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <div className="border-t border-gray-100" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-10" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-10" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))
+        ) : filteredReceipts.length > 0 ? (
           filteredReceipts.map((receipt) => (
             <Card
               key={receipt.id}
@@ -196,7 +236,7 @@ export default function ReceiptsPage() {
                                 </div>
                               </div>
                               <p className="text-sm text-gray-500">
-                                Date: {selectedReceipt.paymentDate}
+                                Date: {new Date(selectedReceipt.paymentDate).toLocaleDateString()}
                               </p>
                             </div>
 

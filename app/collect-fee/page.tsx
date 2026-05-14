@@ -12,11 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle } from "lucide-react";
-import { getStudents, createPayment } from "@/lib/api";
+import { CheckCircle, AlertCircle, CalendarIcon } from "lucide-react";
+import { getStudents, createPayment, checkUtrId } from "@/lib/api";
 
 interface Student {
   id: string;
@@ -38,25 +42,12 @@ interface SubmittedData {
   receiptNumber: string;
 }
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+
 
 export default function CollectFeePage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [utrId, setUtrId] = useState("");
@@ -66,6 +57,8 @@ export default function CollectFeePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [utrExists, setUtrExists] = useState(false);
+  const [isCheckingUtr, setIsCheckingUtr] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -90,8 +83,35 @@ export default function CollectFeePage() {
     };
   }, []);
 
+  // Debounced UTR check
+  useEffect(() => {
+    if (!utrId || utrId.length < 3) {
+      setUtrExists(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setIsCheckingUtr(true);
+        const { exists } = await checkUtrId(utrId);
+        setUtrExists(exists);
+        if (exists) {
+          setError("Duplicate UTR ID: This transaction has already been recorded.");
+        } else if (error?.toLowerCase().includes("duplicate utr")) {
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Error checking UTR:", err);
+      } finally {
+        setIsCheckingUtr(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [utrId]);
+
   const student = students.find((s) => s.id === selectedStudent);
-  const isDuplicateUtr = error?.toLowerCase().includes("duplicate utr") || false;
+  const isDuplicateUtr = utrExists || (error?.toLowerCase().includes("duplicate utr") || false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,34 +134,36 @@ export default function CollectFeePage() {
           amount: parseFloat(amount),
           method: paymentMethod as "upi" | "bank_transfer" | "cash" | "cheque",
           utrId,
-          month: selectedMonth,
-          year: new Date().getFullYear(),
-          date: new Date().toISOString(),
+          month: selectedMonth ? format(selectedMonth, "MMMM") : "",
+          year: selectedMonth ? selectedMonth.getFullYear() : new Date().getFullYear(),
+          date: selectedMonth ? selectedMonth.toISOString() : new Date().toISOString(),
           status: "completed",
           notes,
         });
 
         setSubmittedData({
           student: student?.name,
-          month: selectedMonth,
+          month: selectedMonth ? format(selectedMonth, "MMMM yyyy") : "",
           amount,
           method: paymentMethod,
           utr: utrId,
-          date: new Date().toLocaleDateString(),
-          receiptNumber: res.receipt?.receiptNumber || `RCP-2024-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
+          date: selectedMonth ? selectedMonth.toLocaleDateString() : new Date().toLocaleDateString(),
+          receiptNumber: res.receipt?.receiptNumber || `RCP-${selectedMonth ? selectedMonth.getFullYear() : new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
         });
         setIsSubmitted(true);
         
         // Reset form
         setSelectedStudent("");
-        setSelectedMonth("");
+        setSelectedMonth(new Date());
         setAmount("");
         setPaymentMethod("");
         setUtrId("");
         setNotes("");
       } catch (err: unknown) {
-        console.error("Error creating payment:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to create payment";
+        if (!errorMessage.toLowerCase().includes("duplicate utr")) {
+          console.error("Error creating payment:", err);
+        }
         setError(errorMessage);
       } finally {
         setIsSubmitting(false);
@@ -151,10 +173,11 @@ export default function CollectFeePage() {
 
   const handleReset = () => {
     setSelectedStudent("");
-    setSelectedMonth("");
+    setSelectedMonth(new Date());
     setAmount("");
     setPaymentMethod("");
     setUtrId("");
+    setUtrExists(false);
     setNotes("");
     setIsSubmitted(false);
     setSubmittedData(null);
@@ -250,7 +273,7 @@ export default function CollectFeePage() {
                   ₹{parseInt(submittedData.amount).toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  For: {submittedData.month} 2024
+                  For: {submittedData.month}
                 </p>
               </div>
 
@@ -391,24 +414,30 @@ export default function CollectFeePage() {
               <Label htmlFor="month" className="text-sm font-medium">
                 Select Month
               </Label>
-              <Select 
-                value={selectedMonth} 
-                onValueChange={(val) => {
-                  setSelectedMonth(val);
-                  if (error) setError(null);
-                }}
-              >
-                <SelectTrigger className="border-gray-200">
-                  <SelectValue placeholder="Choose a month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((month) => (
-                    <SelectItem key={month} value={month}>
-                      {month} 2024
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal border-gray-200",
+                      !selectedMonth && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedMonth ? format(selectedMonth, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedMonth}
+                    onSelect={(date) => {
+                      setSelectedMonth(date);
+                      if (error) setError(null);
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Amount */}
@@ -473,8 +502,11 @@ export default function CollectFeePage() {
                 }}
                 className={`border-gray-200 ${
                   isDuplicateUtr ? "border-red-500 ring-1 ring-red-500" : ""
-                }`}
+                } ${isCheckingUtr ? "opacity-70" : ""}`}
               />
+              {isCheckingUtr && (
+                <p className="text-xs text-gray-500 animate-pulse">Checking UTR uniqueness...</p>
+              )}
               {isDuplicateUtr && (
                 <Alert className="border-red-200 bg-red-50">
                   <AlertCircle className="h-4 w-4 text-red-600" />

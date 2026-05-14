@@ -44,7 +44,10 @@ async function apiCall<T>(
           errorData = { error: `HTTP ${response.status}` };
         }
         
-        console.error(`API Error [${endpoint}]:`, errorData);
+        if (response.status >= 500) {
+          console.error(`API Server Error [${endpoint}]:`, errorData);
+        }
+        
         const error = new Error(errorData.error || errorData.details || `HTTP ${response.status}`);
         
         // Don't retry on client errors (4xx), only on server errors (5xx) or network issues
@@ -115,6 +118,10 @@ export async function createPayment(data: Partial<Payment>): Promise<Payment & {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export async function checkUtrId(utrId: string): Promise<{ exists: boolean }> {
+  return apiCall<{ exists: boolean }>(`/payments/check-utr?utrId=${utrId}`);
 }
 
 // Receipts API

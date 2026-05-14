@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, Download } from "lucide-react";
 import { getPayments } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Payment {
   id: string;
@@ -41,12 +42,14 @@ export default function PaymentsPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterMethod, setFilterMethod] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
+        setIsLoading(true);
         const data = await getPayments();
         if (mounted) {
           setPayments(data);
@@ -55,6 +58,10 @@ export default function PaymentsPage() {
         if (mounted) {
           console.error("Error fetching payments:", err);
           setError("Failed to load payments");
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
         }
       }
     };
@@ -137,25 +144,25 @@ export default function PaymentsPage() {
         <Card className="p-4 md:p-6 border-gray-200">
           <p className="text-gray-600 text-xs md:text-sm font-medium">Total Payments</p>
           <p className="text-2xl md:text-3xl font-bold text-black mt-2">
-            {filteredPayments.length}
+            {isLoading ? <Skeleton className="h-8 w-12" /> : filteredPayments.length}
           </p>
         </Card>
         <Card className="p-4 md:p-6 border-gray-200">
           <p className="text-gray-600 text-xs md:text-sm font-medium">Total Amount</p>
           <p className="text-2xl md:text-3xl font-bold text-black mt-2">
-            ₹{totalAmount.toLocaleString()}
+            {isLoading ? <Skeleton className="h-8 w-24" /> : `₹${totalAmount.toLocaleString()}`}
           </p>
         </Card>
         <Card className="p-4 md:p-6 border-gray-200">
           <p className="text-gray-600 text-xs md:text-sm font-medium">Completed</p>
           <p className="text-2xl md:text-3xl font-bold text-black mt-2">
-            {filteredPayments.filter((p) => p.status === "completed").length}
+            {isLoading ? <Skeleton className="h-8 w-12" /> : filteredPayments.filter((p) => p.status === "completed").length}
           </p>
         </Card>
         <Card className="p-4 md:p-6 border-gray-200">
           <p className="text-gray-600 text-xs md:text-sm font-medium">Pending</p>
           <p className="text-2xl md:text-3xl font-bold text-black mt-2">
-            {filteredPayments.filter((p) => p.status === "pending").length}
+            {isLoading ? <Skeleton className="h-8 w-12" /> : filteredPayments.filter((p) => p.status === "pending").length}
           </p>
         </Card>
       </div>
@@ -278,7 +285,19 @@ export default function PaymentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPayments.length > 0 ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="border-gray-200">
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredPayments.length > 0 ? (
               filteredPayments.map((payment) => (
                 <TableRow
                   key={payment.id}

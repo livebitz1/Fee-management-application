@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus } from "lucide-react";
 import { getStudents, createStudent } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Student {
   id: string;
@@ -40,6 +41,7 @@ export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -52,6 +54,7 @@ export default function StudentsPage() {
 
   const fetchStudents = async (mounted = true) => {
     try {
+      setIsLoading(true);
       const data = await getStudents();
       if (mounted) {
         setError(null);
@@ -61,6 +64,10 @@ export default function StudentsPage() {
       if (mounted) {
         console.error("Error fetching students:", err);
         setError("Failed to load students");
+      }
+    } finally {
+      if (mounted) {
+        setIsLoading(false);
       }
     }
   };
@@ -276,7 +283,18 @@ export default function StudentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStudents.length > 0 ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="border-gray-200">
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredStudents.length > 0 ? (
               filteredStudents.map((student) => (
                 <TableRow key={student.id} className="border-gray-200">
                   <TableCell className="font-medium text-black text-xs md:text-sm">
@@ -324,7 +342,7 @@ export default function StudentsPage() {
         <Card className="p-6 border-gray-200">
           <p className="text-gray-600 text-sm font-medium">Total Students</p>
           <p className="text-2xl font-bold text-black mt-2">
-            {students.length}
+            {isLoading ? <Skeleton className="h-8 w-12" /> : students.length}
           </p>
         </Card>
         <Card className="p-6 border-gray-200">
@@ -332,13 +350,13 @@ export default function StudentsPage() {
             Fees Paid This Month
           </p>
           <p className="text-2xl font-bold text-black mt-2">
-            {students.filter((s) => s.paymentStatus === "paid").length}
+            {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter((s) => s.paymentStatus === "paid").length}
           </p>
         </Card>
         <Card className="p-6 border-gray-200">
           <p className="text-gray-600 text-sm font-medium">Pending/Overdue</p>
           <p className="text-2xl font-bold text-black mt-2">
-            {students.filter(
+            {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter(
               (s) => s.paymentStatus === "pending" || s.paymentStatus === "overdue"
             ).length}
           </p>

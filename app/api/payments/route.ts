@@ -115,7 +115,11 @@ export async function POST(request: NextRequest) {
             student: body.studentName,
             action: "Fee collected",
             amount: body.amount,
-            time: "Just now",
+            time: new Date(body.date).toLocaleDateString("en-IN", { 
+              day: 'numeric', 
+              month: 'short',
+              year: 'numeric'
+            }),
             status: "completed",
           },
         });
