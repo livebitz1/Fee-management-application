@@ -43,6 +43,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { downloadReceipt } from "@/lib/pdf";
 import { toast } from "sonner";
+import Link from "next/link";
 
 
 
@@ -454,8 +455,8 @@ export default function CollectFeePage() {
                         </div>
                         {student.yearlyFees && student.yearlyFees.length > 0 ? (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {student.yearlyFees.map((yf) => (
-                              <div key={yf.id} className="p-3 bg-white rounded-xl border border-indigo-50 shadow-sm space-y-1.5 transition-all hover:border-indigo-100 hover:shadow-md">
+                            {student.yearlyFees.map((yf, idx) => (
+                              <div key={yf.id || idx} className="p-3 bg-white rounded-xl border border-indigo-50 shadow-sm space-y-1.5 transition-all hover:border-indigo-100 hover:shadow-md">
                                 <div className="flex justify-between items-start">
                                   <p className="text-[9px] font-bold text-slate-400 uppercase">{yf.yearName}</p>
                                   <Badge className={cn(
@@ -563,8 +564,8 @@ export default function CollectFeePage() {
                         <SelectValue placeholder="Select Year to Pay For" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-slate-100">
-                        {student?.yearlyFees?.map((yf) => (
-                          <SelectItem key={yf.id} value={yf.id}>
+                        {student?.yearlyFees?.map((yf, idx) => (
+                          <SelectItem key={yf.id || idx} value={yf.id || idx.toString()}>
                             {yf.yearName} (Due: ₹{(yf.amount - (yf.paidAmount || 0)).toLocaleString()})
                           </SelectItem>
                         ))}
