@@ -6,6 +6,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const students = await prisma.student.findMany({
+      include: {
+        payments: {
+          where: { status: "completed" }
+        }
+      },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(students);

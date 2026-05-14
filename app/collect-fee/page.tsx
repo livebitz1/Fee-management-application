@@ -50,6 +50,7 @@ interface Student {
   admissionNumber: string;
   monthlyFee: number;
   paymentStatus: string;
+  payments: { amount: number }[];
 }
 
 interface SubmittedData {
@@ -133,9 +134,14 @@ export default function CollectFeePage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isDuplicateUtr) return;
+    if (isDuplicateUtr && paymentMethod !== "cash") return;
     
-    if (selectedStudent && selectedMonth && amount && paymentMethod && utrId) {
+    // Auto-generate UTR for cash if not provided
+    const finalUtrId = paymentMethod === "cash" 
+      ? (utrId || `CASH-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`.toUpperCase())
+      : utrId;
+
+    if (selectedStudent && selectedMonth && amount && paymentMethod && finalUtrId) {
       try {
         setIsSubmitting(true);
         setError(null);
@@ -145,7 +151,7 @@ export default function CollectFeePage() {
           studentName: student?.name,
           amount: parseFloat(amount),
           method: paymentMethod as "upi" | "bank_transfer" | "cash" | "cheque",
-          utrId,
+          utrId: finalUtrId,
           month: "Annual Fee",
           year: new Date().getFullYear(),
           date: selectedMonth ? selectedMonth.toISOString() : new Date().toISOString(),
@@ -158,7 +164,7 @@ export default function CollectFeePage() {
           month: `Annual Session ${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
           amount,
           method: paymentMethod,
-          utr: utrId,
+          utr: finalUtrId,
           date: selectedMonth ? format(selectedMonth, "PPP") : format(new Date(), "PPP"),
           receiptNumber: res.receipt?.receiptNumber || `RCP-${Date.now().toString().slice(-6)}`,
         });
@@ -405,23 +411,44 @@ export default function CollectFeePage() {
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between"
+                      className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-sm">
-                          {student.name.charAt(0)}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-lg">
+                            {student.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900 text-base">{student.name}</p>
+                            <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">Enrollment Verified</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-900 text-sm">{student.name}</p>
-                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Yearly Fee: ₹{student.monthlyFee}</p>
+                        <Badge className={cn(
+                          "rounded-full px-3 py-1 border-0 font-black text-[10px] uppercase tracking-wider shadow-sm",
+                          student.paymentStatus === 'paid' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+                        )}>
+                          {student.paymentStatus}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-indigo-100/50">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Yearly Fee</p>
+                          <p className="text-sm font-black text-slate-900">₹{student.monthlyFee.toLocaleString()}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Amount Paid</p>
+                          <p className="text-sm font-black text-emerald-600">
+                            ₹{student.payments.reduce((acc, p) => acc + p.amount, 0).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Remaining</p>
+                          <p className="text-sm font-black text-rose-600">
+                            ₹{(student.monthlyFee - student.payments.reduce((acc, p) => acc + p.amount, 0)).toLocaleString()}
+                          </p>
                         </div>
                       </div>
-                      <Badge className={cn(
-                        "rounded-full px-3 py-1 border-0 font-black text-[10px] uppercase tracking-wider",
-                        student.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                      )}>
-                        {student.paymentStatus}
-                      </Badge>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -491,15 +518,17 @@ export default function CollectFeePage() {
                     <div className="relative group">
                       <ShieldCheck className={cn(
                         "absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
-                        isCheckingUtr ? "text-indigo-400 animate-pulse" : isDuplicateUtr ? "text-rose-500" : "text-slate-400"
+                        isCheckingUtr ? "text-indigo-400 animate-pulse" : (isDuplicateUtr && paymentMethod !== "cash") ? "text-rose-500" : "text-slate-400"
                       )} />
                       <Input
-                        placeholder="UTR or Ref Number"
-                        value={utrId}
+                        placeholder={paymentMethod === "cash" ? "AUTO-GENERATED FOR CASH" : "UTR OR REF NUMBER"}
+                        value={paymentMethod === "cash" ? "" : utrId}
+                        disabled={paymentMethod === "cash"}
                         onChange={(e) => setUtrId(e.target.value.toUpperCase())}
                         className={cn(
                           "pl-10 h-12 bg-slate-50 border-transparent rounded-xl focus:bg-white transition-all font-mono text-sm uppercase",
-                          isDuplicateUtr && "border-rose-200 bg-rose-50 focus:border-rose-300 focus:ring-rose-100"
+                          (isDuplicateUtr && paymentMethod !== "cash") && "border-rose-200 bg-rose-50 focus:border-rose-300 focus:ring-rose-100",
+                          paymentMethod === "cash" && "bg-slate-100 text-slate-400 cursor-not-allowed italic"
                         )}
                       />
                     </div>
@@ -528,7 +557,7 @@ export default function CollectFeePage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!selectedStudent || !amount || !paymentMethod || !utrId || isSubmitting || isDuplicateUtr}
+                  disabled={!selectedStudent || !amount || !paymentMethod || (paymentMethod !== "cash" && !utrId) || isSubmitting || (paymentMethod !== "cash" && isDuplicateUtr)}
                   className="flex-1 rounded-2xl h-14 bg-black hover:bg-slate-800 text-white font-bold text-lg shadow-xl shadow-slate-200 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
