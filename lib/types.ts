@@ -8,6 +8,7 @@ export type Student = {
   monthlyFee: number;
   paymentStatus: "paid" | "pending" | "overdue";
   lastPaymentDate?: string;
+  payments?: { amount: number }[];
 };
 
 export type Payment = {

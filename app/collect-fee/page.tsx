@@ -38,20 +38,13 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { getStudents, createPayment, checkUtrId } from "@/lib/api";
+import { Student } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { downloadReceipt } from "@/lib/pdf";
 import { toast } from "sonner";
 
-interface Student {
-  id: string;
-  name: string;
-  class: string;
-  section: string;
-  admissionNumber: string;
-  monthlyFee: number;
-  paymentStatus: string;
-  payments: { amount: number }[];
-}
+
 
 interface SubmittedData {
   student?: string;
@@ -439,13 +432,13 @@ export default function CollectFeePage() {
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Amount Paid</p>
                           <p className="text-sm font-black text-emerald-600">
-                            ₹{student.payments.reduce((acc, p) => acc + p.amount, 0).toLocaleString()}
+                            ₹{(student.payments?.reduce((acc, p) => acc + p.amount, 0) || 0).toLocaleString()}
                           </p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Remaining</p>
                           <p className="text-sm font-black text-rose-600">
-                            ₹{(student.monthlyFee - student.payments.reduce((acc, p) => acc + p.amount, 0)).toLocaleString()}
+                            ₹{(student.monthlyFee - (student.payments?.reduce((acc, p) => acc + p.amount, 0) || 0)).toLocaleString()}
                           </p>
                         </div>
                       </div>
