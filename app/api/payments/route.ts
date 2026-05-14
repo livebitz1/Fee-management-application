@@ -58,9 +58,27 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // 2. Update student status if payment is completed
+      // 2. Update student status and yearly fee if payment is completed
       if (payment.status === "completed") {
         const student = await tx.student.findUnique({ where: { id: body.studentId } });
+        
+        // Update specific YearlyFee if targetYearId is provided
+        if (body.targetYearId) {
+          const yearlyFee = await tx.yearlyFee.findUnique({ where: { id: body.targetYearId } });
+          if (yearlyFee) {
+            const newPaidAmount = yearlyFee.paidAmount + body.amount;
+            const newStatus = newPaidAmount >= yearlyFee.amount ? "paid" : "pending";
+            
+            await tx.yearlyFee.update({
+              where: { id: body.targetYearId },
+              data: {
+                paidAmount: newPaidAmount,
+                status: newStatus
+              }
+            });
+          }
+        }
+
         const isFullyPaid = student ? body.amount >= student.monthlyFee : true;
 
         await tx.student.update({

@@ -35,9 +35,11 @@ import {
   MoreVertical,
   UserPlus,
   CreditCard,
-  UserCircle
+  UserCircle,
+  Pencil,
+  Trash2
 } from "lucide-react";
-import { getStudents, createStudent } from "@/lib/api";
+import { getStudents, createStudent, updateStudent, getStudent } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
@@ -59,6 +61,8 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     course: "",
@@ -67,6 +71,9 @@ export default function StudentsPage() {
     admissionNumber: "",
     studentPhone: "",
     monthlyFee: "",
+    yearlyFees: [
+      { yearName: "Year 1", amount: "" },
+    ]
   });
 
   const fetchStudents = async (mounted = true) => {
@@ -105,10 +112,24 @@ export default function StudentsPage() {
         setError("Please fill in all required fields");
         return;
       }
-      await createStudent({
+      
+      const processedYearlyFees = formData.yearlyFees.map(yf => ({
+        ...yf,
+        amount: parseFloat(yf.amount as string) || 0
+      }));
+
+      const payload = {
         ...formData,
-        monthlyFee: parseFloat(formData.monthlyFee),
-      });
+        monthlyFee: processedYearlyFees.reduce((acc, yf) => acc + yf.amount, 0),
+        yearlyFees: processedYearlyFees,
+      };
+
+      if (isEditMode && editingStudentId) {
+        await updateStudent(editingStudentId, payload);
+      } else {
+        await createStudent(payload);
+      }
+
       setFormData({
         name: "",
         course: "",
@@ -117,12 +138,45 @@ export default function StudentsPage() {
         admissionNumber: "",
         studentPhone: "",
         monthlyFee: "",
+        yearlyFees: [{ yearName: "Year 1", amount: "" }],
       });
       setIsAddModalOpen(false);
+      setIsEditMode(false);
+      setEditingStudentId(null);
       await fetchStudents();
     } catch (err) {
-      console.error("Error adding student:", err);
-      setError("Failed to add student");
+      console.error("Error saving student:", err);
+      setError("Failed to save student details");
+    }
+  };
+
+  const handleEditClick = async (student: any) => {
+    try {
+      setIsLoading(true);
+      const fullStudent = await getStudent(student.id);
+      setFormData({
+        name: fullStudent.name,
+        course: fullStudent.course,
+        academicYear: fullStudent.academicYear,
+        semester: fullStudent.semester || "",
+        admissionNumber: fullStudent.admissionNumber,
+        studentPhone: fullStudent.studentPhone || "",
+        monthlyFee: fullStudent.monthlyFee.toString(),
+        yearlyFees: fullStudent.yearlyFees?.map((yf: any) => ({
+          yearName: yf.yearName,
+          amount: yf.amount.toString(),
+          paidAmount: yf.paidAmount,
+          status: yf.status
+        })) || [{ yearName: "Year 1", amount: "" }]
+      });
+      setEditingStudentId(student.id);
+      setIsEditMode(true);
+      setIsAddModalOpen(true);
+    } catch (err) {
+      console.error("Error preparing edit:", err);
+      setError("Failed to load student details for editing");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -179,9 +233,13 @@ export default function StudentsPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px] rounded-2xl border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">New Enrollment</DialogTitle>
+              <DialogTitle className="text-2xl font-bold">
+                {isEditMode ? "Edit Student Profile" : "New Enrollment"}
+              </DialogTitle>
               <DialogDescription className="text-slate-500">
-                Register a new student into the system. All fields marked with * are required.
+                {isEditMode 
+                  ? "Update student information and adjust fee schedules." 
+                  : "Register a new student into the system. All fields marked with * are required."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-5 py-4">
@@ -239,16 +297,72 @@ export default function StudentsPage() {
                   />
                 </div>
               </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fee" className="text-xs font-bold text-slate-500 uppercase">Total Yearly Fee (₹)</Label>
-                  <Input
-                    id="fee"
-                    type="number"
-                    placeholder="e.g. 25000"
-                    className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
-                    value={formData.monthlyFee}
-                    onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
-                  />
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Yearly Fee Structure (₹)</Label>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 px-2 text-[9px] font-bold rounded-md border-indigo-100 text-indigo-600 hover:bg-indigo-50"
+                      onClick={() => {
+                        const nextYear = formData.yearlyFees.length + 1;
+                        setFormData({
+                          ...formData,
+                          yearlyFees: [...formData.yearlyFees, { yearName: `Year ${nextYear}`, amount: "" }]
+                        });
+                      }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Add Year
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                    {formData.yearlyFees.map((yf, idx) => (
+                      <div key={idx} className="flex items-end gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                        <div className="flex-1 space-y-1.5">
+                          <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Year Label</Label>
+                          <Input
+                            placeholder="e.g. 1st Year"
+                            className="h-9 bg-white border-slate-200 rounded-lg text-xs"
+                            value={yf.yearName}
+                            onChange={(e) => {
+                              const newFees = [...formData.yearlyFees];
+                              newFees[idx].yearName = e.target.value;
+                              setFormData({ ...formData, yearlyFees: newFees });
+                            }}
+                          />
+                        </div>
+                        <div className="flex-[1.5] space-y-1.5">
+                          <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Tuition Amount</Label>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              className="h-9 bg-white border-slate-200 rounded-lg text-xs"
+                              value={yf.amount}
+                              onChange={(e) => {
+                                const newFees = [...formData.yearlyFees];
+                                newFees[idx].amount = e.target.value;
+                                setFormData({ ...formData, yearlyFees: newFees });
+                              }}
+                            />
+                          </div>
+                        </div>
+                        {formData.yearlyFees.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg"
+                            onClick={() => {
+                              const newFees = formData.yearlyFees.filter((_, i) => i !== idx);
+                              setFormData({ ...formData, yearlyFees: newFees });
+                            }}
+                          >
+                            <Plus className="w-4 h-4 rotate-45" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-xs font-bold text-slate-500 uppercase">Student Contact No.</Label>
@@ -419,12 +533,22 @@ export default function StudentsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-right">
-                        <Link href="/collect-fee">
-                          <Button size="sm" variant="ghost" className="h-9 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs">
-                            <CreditCard className="w-3.5 h-3.5 mr-2" />
-                            Collect Fee
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleEditClick(student)}
+                            className="h-9 w-9 p-0 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                          >
+                            <Pencil className="w-4 h-4" />
                           </Button>
-                        </Link>
+                          <Link href="/collect-fee">
+                            <Button size="sm" variant="ghost" className="h-9 rounded-xl text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs">
+                              <CreditCard className="w-3.5 h-3.5 mr-2" />
+                              Collect Fee
+                            </Button>
+                          </Link>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

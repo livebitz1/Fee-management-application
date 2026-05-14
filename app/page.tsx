@@ -195,11 +195,11 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center gap-2 text-slate-500 text-sm font-medium mb-1">
             <Calendar className="w-4 h-4" />
-            <span>Academic Session 2024-25</span>
+            <span>Academic Session {new Date().getFullYear()}-{ (new Date().getFullYear() + 1).toString().slice(-2) }</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Admin Dashboard</h1>
-          <p className="text-slate-500 mt-1">
-            Track student collections and financial health in real-time.
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Executive Dashboard</h1>
+          <p className="text-slate-500 mt-1 font-medium">
+            Strategic financial tracking for multi-year academic programs.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -497,7 +497,7 @@ export default function Dashboard() {
                         <p className="text-sm font-bold text-slate-900">{fee.student_name}</p>
                         <div className="flex gap-2 mt-0.5">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{fee.course}</span>
-                          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">• {fee.monthsFell} Month Pending</span>
+                          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">• Year {fee.monthsFell} Priority</span>
                         </div>
                       </div>
                     </div>

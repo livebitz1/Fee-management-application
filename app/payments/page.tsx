@@ -277,9 +277,8 @@ export default function PaymentsPage() {
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-100">
                     <SelectItem value="all">Full History</SelectItem>
-                    <SelectItem value="May">May 2024</SelectItem>
-                    <SelectItem value="April">April 2024</SelectItem>
-                    <SelectItem value="March">March 2024</SelectItem>
+                    <SelectItem value="2024-25">Session 2024-25</SelectItem>
+                    <SelectItem value="2025-26">Session 2025-26</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -341,6 +340,7 @@ export default function PaymentsPage() {
               <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Student & Reference</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Collection Detail</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Target Session</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Timeline</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-center">Status</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Actions</TableHead>
@@ -383,9 +383,14 @@ export default function PaymentsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-6">
+                        <span className="text-xs font-bold text-indigo-600 uppercase tracking-tighter bg-indigo-50 px-2 py-0.5 rounded-md">
+                          {payment.month}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-700">{payment.month}</span>
-                          <span className="text-[10px] font-medium text-slate-400 mt-0.5">{new Date(payment.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          <span className="text-xs font-bold text-slate-700">{new Date(payment.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
+                          <span className="text-[10px] font-medium text-slate-400 mt-0.5">{new Date(payment.date).getFullYear()}</span>
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-center">

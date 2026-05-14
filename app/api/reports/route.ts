@@ -17,9 +17,10 @@ export async function GET() {
       { name: "Overdue", value: totalStudentsCount > 0 ? Math.round((overdueCount / totalStudentsCount) * 100) : 0, fill: "#ef4444" },
     ];
 
-    // 2. Calculate classWiseData (Collected vs Target per class)
+    // 2. Calculate classWiseData (Collected vs Target per course)
     const students = await prisma.student.findMany({
       include: {
+        yearlyFees: true,
         payments: {
           where: { status: "completed" }
         }
@@ -28,15 +29,19 @@ export async function GET() {
 
     const classStats: Record<string, { collected: number; target: number; studentCount: number }> = {};
     students.forEach((student: any) => {
-      const courseName = student.course;
+      const courseName = student.course || "General";
       if (!classStats[courseName]) {
         classStats[courseName] = { collected: 0, target: 0, studentCount: 0 };
       }
       classStats[courseName].studentCount += 1;
-      classStats[courseName].target += student.monthlyFee;
-      student.payments.forEach((payment: any) => {
-        classStats[courseName].collected += payment.amount;
-      });
+      
+      // Calculate target and collected from YearlyFees for better accuracy
+      const totalTarget = student.yearlyFees?.reduce((acc: number, yf: any) => acc + (yf.amount || 0), 0) || student.monthlyFee;
+      const totalCollected = student.yearlyFees?.reduce((acc: number, yf: any) => acc + (yf.paidAmount || 0), 0) || 
+                            student.payments?.reduce((acc: number, p: any) => acc + (p.amount || 0), 0) || 0;
+
+      classStats[courseName].target += totalTarget;
+      classStats[courseName].collected += totalCollected;
     });
 
     const classWiseData = Object.entries(classStats).map(([courseName, stats]) => ({

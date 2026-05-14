@@ -64,6 +64,7 @@ export default function CollectFeePage() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [utrId, setUtrId] = useState("");
   const [notes, setNotes] = useState("");
+  const [targetYearId, setTargetYearId] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedData, setSubmittedData] = useState<SubmittedData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,6 +151,7 @@ export default function CollectFeePage() {
           date: selectedMonth ? selectedMonth.toISOString() : new Date().toISOString(),
           status: "completed",
           notes,
+          targetYearId: targetYearId, // Added target year
         });
 
         setSubmittedData({
@@ -424,27 +426,71 @@ export default function CollectFeePage() {
                         </Badge>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-4 pt-4 border-t border-indigo-100/50">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-5 border-t border-indigo-100/50">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Course/Year</p>
-                          <p className="text-sm font-black text-slate-900 truncate">{student.course} ({student.academicYear})</p>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Course/Year</p>
+                          <p className="text-sm font-bold text-slate-900 truncate">{student.course} ({student.academicYear})</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Fee</p>
-                          <p className="text-sm font-black text-slate-900">₹{student.monthlyFee.toLocaleString()}</p>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Fee</p>
+                          <p className="text-sm font-black text-slate-900">₹{(student.yearlyFees?.reduce((acc, yf) => acc + yf.amount, 0) || 0).toLocaleString()}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Paid</p>
-                          <p className="text-sm font-black text-emerald-600">
-                            ₹{(student.payments?.reduce((acc, p) => acc + p.amount, 0) || 0).toLocaleString()}
-                          </p>
+                          <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Paid</p>
+                          <p className="text-sm font-black text-emerald-600">₹{(student.yearlyFees?.reduce((acc, yf) => acc + (yf.paidAmount || 0), 0) || 0).toLocaleString()}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Remaining</p>
+                          <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest">Remaining</p>
                           <p className="text-sm font-black text-rose-600">
-                            ₹{(student.monthlyFee - (student.payments?.reduce((acc, p) => acc + p.amount, 0) || 0)).toLocaleString()}
+                            ₹{((student.yearlyFees?.reduce((acc, yf) => acc + yf.amount, 0) || 0) - 
+                               (student.yearlyFees?.reduce((acc, yf) => acc + (yf.paidAmount || 0), 0) || 0)).toLocaleString()}
                           </p>
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 pt-5 border-t border-indigo-100/50">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Detailed Yearly Breakdown</p>
+                        </div>
+                        {student.yearlyFees && student.yearlyFees.length > 0 ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {student.yearlyFees.map((yf) => (
+                              <div key={yf.id} className="p-3 bg-white rounded-xl border border-indigo-50 shadow-sm space-y-1.5 transition-all hover:border-indigo-100 hover:shadow-md">
+                                <div className="flex justify-between items-start">
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase">{yf.yearName}</p>
+                                  <Badge className={cn(
+                                    "text-[7px] px-1 py-0 rounded-sm font-black uppercase tracking-tighter border-none",
+                                    yf.status === 'paid' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                                  )}>
+                                    {yf.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm font-black text-slate-900">₹{yf.amount.toLocaleString()}</p>
+                                <div className="pt-1.5 border-t border-slate-50">
+                                  <div className="flex justify-between text-[8px] font-bold">
+                                    <span className="text-slate-400 uppercase">Paid</span>
+                                    <span className="text-emerald-600">₹{(yf.paidAmount || 0).toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between text-[8px] font-bold mt-0.5">
+                                    <span className="text-slate-400 uppercase">Due</span>
+                                    <span className="text-rose-500">₹{(yf.amount - (yf.paidAmount || 0)).toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex flex-col items-center text-center">
+                            <AlertCircle className="w-5 h-5 text-amber-500 mb-2" />
+                            <p className="text-xs font-bold text-amber-900">No Yearly Fees Defined</p>
+                            <p className="text-[10px] text-amber-700 mt-1 mb-3 leading-relaxed">This student was registered before the University migration. Please update their profile to see the breakdown.</p>
+                            <Link href="/students">
+                              <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase border-amber-200 text-amber-700 hover:bg-amber-100">
+                                Update Student Profile
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -510,6 +556,24 @@ export default function CollectFeePage() {
                     </Select>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Target Academic Year</Label>
+                    <Select value={targetYearId} onValueChange={setTargetYearId}>
+                      <SelectTrigger className="h-12 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all">
+                        <SelectValue placeholder="Select Year to Pay For" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-slate-100">
+                        {student?.yearlyFees?.map((yf) => (
+                          <SelectItem key={yf.id} value={yf.id}>
+                            {yf.yearName} (Due: ₹{(yf.amount - (yf.paidAmount || 0)).toLocaleString()})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold text-slate-500 uppercase ml-1">Transaction Ref (UTR)</Label>
                     <div className="relative group">

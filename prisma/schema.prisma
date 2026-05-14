@@ -13,11 +13,11 @@ datasource db {
 model Student {
   id                String   @id @default(cuid())
   name              String
-  course            String   // e.g., "B.Tech Computer Science", "MBA"
-  academicYear      String   // e.g., "1st Year", "2nd Year"
+  course            String?  // e.g., "B.Tech Computer Science", "MBA"
+  academicYear      String?  // e.g., "1st Year", "2nd Year"
   semester          String?  // e.g., "Semester 3"
   admissionNumber   String   @unique
-  studentPhone      String
+  studentPhone      String?
   monthlyFee        Float    // Total Yearly/Semester Fee
   paymentStatus     String   @default("pending") // "paid", "pending", "overdue"
   lastPaymentDate   DateTime?
@@ -27,6 +27,7 @@ model Student {
   payments          Payment[]
   receipts          Receipt[]
   pendingFees       PendingFee[]
+  yearlyFees        YearlyFee[]
 
   @@map("students")
   @@index([course])
@@ -86,7 +87,7 @@ model PendingFee {
   studentId         String
   student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   student_name      String
-  course            String
+  course            String?
   monthsFell        Int
   amount            Float
   daysOverdue       Int
@@ -94,6 +95,21 @@ model PendingFee {
   updatedAt         DateTime @updatedAt
 
   @@map("pending_fees")
+  @@index([studentId])
+}
+
+model YearlyFee {
+  id                String   @id @default(cuid())
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  yearName          String   // e.g., "1st Year", "2nd Year"
+  amount            Float
+  paidAmount        Float    @default(0)
+  status            String   @default("pending") // "paid", "pending", "overdue"
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("yearly_fees")
   @@index([studentId])
 }
 

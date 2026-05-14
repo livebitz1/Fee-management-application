@@ -9,7 +9,8 @@ export async function GET() {
       include: {
         payments: {
           where: { status: "completed" }
-        }
+        },
+        yearlyFees: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -34,8 +35,16 @@ export async function POST(request: NextRequest) {
         semester: body.semester,
         admissionNumber: body.admissionNumber,
         studentPhone: body.studentPhone,
-        monthlyFee: body.monthlyFee,
+        monthlyFee: parseFloat(body.monthlyFee),
         paymentStatus: body.paymentStatus || "pending",
+        yearlyFees: {
+          create: body.yearlyFees?.map((yf: any) => ({
+            yearName: yf.yearName,
+            amount: parseFloat(yf.amount),
+            paidAmount: 0,
+            status: "pending"
+          })) || []
+        }
       },
     });
     return NextResponse.json(student, { status: 201 });

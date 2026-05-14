@@ -11,10 +11,20 @@ export async function GET() {
     });
 
     return NextResponse.json(pendingFees);
-  } catch (error) {
-    console.error("Error fetching pending fees:", error);
+  } catch (error: any) {
+    const errorMessage = error.message || String(error);
+    const errorStack = error.stack;
+    
+    console.error("--- PENDING FEES API ERROR ---");
+    console.error("Message:", errorMessage);
+    console.error("Stack:", errorStack);
+    
     return NextResponse.json(
-      { error: "Failed to fetch pending fees" },
+      { 
+        error: "Database Query Failed", 
+        message: errorMessage,
+        suggestion: "Please ensure 'npx prisma db push' has been run and the database is reachable."
+      },
       { status: 500 }
     );
   }

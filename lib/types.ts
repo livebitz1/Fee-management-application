@@ -9,7 +9,16 @@ export type Student = {
   monthlyFee: number;
   paymentStatus: "paid" | "pending" | "overdue";
   lastPaymentDate?: string;
-  payments?: { amount: number }[];
+  payments?: any[];
+  yearlyFees?: YearlyFee[];
+};
+
+export type YearlyFee = {
+  id?: string;
+  yearName: string;
+  amount: number;
+  paidAmount?: number;
+  status?: "paid" | "pending" | "overdue";
 };
 
 export type Payment = {
@@ -24,6 +33,7 @@ export type Payment = {
   date: string;
   status: "completed" | "pending" | "failed";
   notes?: string;
+  targetYearId?: string;
 };
 
 export type Receipt = {
