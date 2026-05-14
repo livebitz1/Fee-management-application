@@ -78,7 +78,7 @@ function ReceiptContent({ receipt, id, className }: { receipt: Receipt; id?: str
             <p className="text-sm font-bold text-slate-700 uppercase">{receipt.paymentMethod.replace("_", " ")}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Period</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Year</p>
             <p className="text-sm font-bold text-slate-700 uppercase">{receipt.month}</p>
           </div>
           <div className="space-y-1 text-right">
@@ -272,7 +272,7 @@ export default function ReceiptsPage() {
                     <p className="text-lg font-black text-slate-900">₹{receipt.amount.toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Period</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Year</p>
                     <p className="text-xs font-bold text-indigo-600">{receipt.month}</p>
                   </div>
                 </div>

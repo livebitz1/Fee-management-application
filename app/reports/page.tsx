@@ -255,8 +255,8 @@ export default function ReportsPage() {
         {/* Monthly Trend */}
         <Card className="rounded-2xl border-none shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">Revenue Analytics</CardTitle>
-            <CardDescription>Monthly collection trends over the last 6 months</CardDescription>
+            <CardTitle className="text-lg font-semibold">Annual Revenue Distribution</CardTitle>
+            <CardDescription>Fee collection progress across the academic session</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full pt-4">

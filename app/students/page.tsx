@@ -226,11 +226,11 @@ export default function StudentsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fee" className="text-xs font-bold text-slate-500 uppercase">Monthly Fee (₹)</Label>
+                  <Label htmlFor="fee" className="text-xs font-bold text-slate-500 uppercase">Total Yearly Fee (₹)</Label>
                   <Input
                     id="fee"
                     type="number"
-                    placeholder="e.g. 2500"
+                    placeholder="e.g. 25000"
                     className="h-11 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all"
                     value={formData.monthlyFee}
                     onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
@@ -292,7 +292,7 @@ export default function StudentsPage() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-500">Cleared This Month</p>
+                <p className="text-sm font-medium text-slate-500">Cleared This Year</p>
                 <div className="text-2xl font-black text-slate-900">
                   {isLoading ? <Skeleton className="h-8 w-12" /> : students.filter((s) => s.paymentStatus === "paid").length}
                 </div>
@@ -342,7 +342,7 @@ export default function StudentsPage() {
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Student Profile</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Academic Detail</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Parent Contact</TableHead>
-                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Monthly Fee</TableHead>
+                <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider">Total Fee</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-center">Fee Status</TableHead>
                 <TableHead className="py-4 px-6 text-slate-500 font-bold text-xs uppercase tracking-wider text-right">Actions</TableHead>
               </TableRow>

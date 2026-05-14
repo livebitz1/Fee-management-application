@@ -146,8 +146,8 @@ export default function CollectFeePage() {
           amount: parseFloat(amount),
           method: paymentMethod as "upi" | "bank_transfer" | "cash" | "cheque",
           utrId,
-          month: selectedMonth ? format(selectedMonth, "MMMM") : "",
-          year: selectedMonth ? selectedMonth.getFullYear() : new Date().getFullYear(),
+          month: "Annual Fee",
+          year: new Date().getFullYear(),
           date: selectedMonth ? selectedMonth.toISOString() : new Date().toISOString(),
           status: "completed",
           notes,
@@ -155,7 +155,7 @@ export default function CollectFeePage() {
 
         setSubmittedData({
           student: student?.name,
-          month: selectedMonth ? format(selectedMonth, "MMMM yyyy") : "",
+          month: `Annual Session ${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
           amount,
           method: paymentMethod,
           utr: utrId,
@@ -248,7 +248,7 @@ export default function CollectFeePage() {
               <div className="flex justify-between items-center bg-slate-50 rounded-2xl p-6">
                 <div>
                   <p className="text-xs font-bold text-slate-500">Service Period</p>
-                  <p className="text-lg font-black text-slate-900">{submittedData.month}</p>
+                  <p className="text-lg font-black text-slate-900">Full Academic Year</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold text-slate-500">Total Amount</p>
@@ -413,7 +413,7 @@ export default function CollectFeePage() {
                         </div>
                         <div>
                           <p className="font-bold text-slate-900 text-sm">{student.name}</p>
-                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Standard Fee: ₹{student.monthlyFee}</p>
+                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Yearly Fee: ₹{student.monthlyFee}</p>
                         </div>
                       </div>
                       <Badge className={cn(
